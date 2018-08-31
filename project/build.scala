@@ -35,6 +35,9 @@ object build {
     val logbackClassic = "ch.qos.logback" % "logback-classic" % ver.logback
 
     val circeCore = "io.circe" %% "circe-core" % ver.circe
+    val circeGeneric = "io.circe" %% "circe-generic" % ver.circe
+    val circeParser = "io.circe" %% "circe-parser" % ver.circe
+    val circeOptics = "io.circe" %% "circe-optics" % ver.circe
 
     val hikariCp = "com.zaxxer" % "HikariCP" % ver.hikariCp
     val h2 = "com.h2database" % "h2" % ver.h2

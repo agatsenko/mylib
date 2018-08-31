@@ -1,2 +1,8 @@
-*.class
-*.log
+/**/target
+
+/.idea
+/.classpath
+/.project
+/.settings
+
+/modules/web/mylib-web-play/logs

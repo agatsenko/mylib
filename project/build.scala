@@ -78,9 +78,6 @@ object build {
 
     excludeFilter in unmanagedSources := HiddenFileFilter || ".keepdir",
     excludeFilter in unmanagedResources := HiddenFileFilter || ".keepdir",
-
-    excludeFilter in unmanagedSources := HiddenFileFilter || ".keepdir",
-    excludeFilter in unmanagedResources := HiddenFileFilter || ".keepdir",
   )
 
   val scalaCommonSettings = commonSettings ++ Seq(

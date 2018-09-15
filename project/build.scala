@@ -3,42 +3,51 @@ import Keys._
 
 object build {
   object project {
-    val org = "com.agat"
+    val org = "io.agatsenko"
     val ver = "0.1.0"
   }
 
   object ver {
     val java = "1.8"
-    val scala = "2.12.6"
+    val crossScala = Seq("2.11.12", "2.12.6")
 
     val enumeratum = "1.5.+"
 
     val slf4j = "1.7.+"
     val logback = "1.2.+"
+    val scalaLogging = "3.9.+"
+    val janino = "3.0.+"
+
+    val mango = "0.2.+"
 
     val circe = "0.9.+"
 
+    val scalikejdbc = "3.3.+"
     val hikariCp = "2.7.+"
     val h2 = "1.4.+"
 
     val scalatest = "3.0.5"
-    val scalatestplusPlay = "3.1.2"
+    val scalatestplusPlay = "3.1.+"
   }
 
   object depends {
-    val scalaLib = "org.scala-lang" % "scala-library" % ver.scala
-    val scalaReflect = "org.scala-lang" % "scala-reflect" % ver.scala
+    val scalaLib = "org.scala-lang" % "scala-library"
 
     val enumeratum = "com.beachape" %% "enumeratum" % ver.enumeratum
 
     val slf4jApi = "org.slf4j" % "slf4j-api" % ver.slf4j
     val logbackClassic = "ch.qos.logback" % "logback-classic" % ver.logback
+    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % ver.scalaLogging
+    val janio = "org.codehaus.janino" % "janino" % ver.janino
+
+    val mangoCommon = "io.mango" %% "mango-common" % ver.mango
 
     val circeCore = "io.circe" %% "circe-core" % ver.circe
     val circeGeneric = "io.circe" %% "circe-generic" % ver.circe
     val circeParser = "io.circe" %% "circe-parser" % ver.circe
     val circeOptics = "io.circe" %% "circe-optics" % ver.circe
 
+    val scalikejdbc = "org.scalikejdbc" %% "scalikejdbc" % ver.scalikejdbc
     val hikariCp = "com.zaxxer" % "HikariCP" % ver.hikariCp
     val h2 = "com.h2database" % "h2" % ver.h2
 
@@ -50,7 +59,7 @@ object build {
     organization := project.org,
     version := project.ver,
 
-    scalaVersion := ver.scala,
+    crossScalaVersions := ver.crossScala,
 
     // some info about scala compile options see in
     // http://blog.threatstack.com/useful-scalac-options-for-better-scala-development-part-1
@@ -81,13 +90,15 @@ object build {
 
     excludeFilter in unmanagedSources := HiddenFileFilter || ".keepdir",
     excludeFilter in unmanagedResources := HiddenFileFilter || ".keepdir",
+
+    publishM2Configuration := publishM2Configuration.value.withOverwrite(true),
   )
 
   val scalaCommonSettings = commonSettings ++ Seq(
     libraryDependencies ++= Seq(
-      depends.scalaLib,
-      depends.scalaReflect,
+      depends.scalaLib % scalaVersion.value,
       depends.slf4jApi,
+      depends.scalaLogging,
 
       depends.logbackClassic % Test,
       depends.scalatest % Test,

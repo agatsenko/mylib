@@ -1,56 +1,81 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// common modules
+//#region test modules
 
-lazy val `mylib-infrastructure` = (project in file("./modules/common/mylib-infrastructure")).
+lazy val mylibTest = (project in file("./modules/test/mylib-test")).
     settings(build.scalaCommonSettings: _*).
     settings(
-      name := "mylib-infrastructure",
+      name := "mylib-test",
       libraryDependencies ++= Seq(
+        build.depends.slf4jApi,
+        build.depends.logbackClassic,
+        build.depends.janio,
+        build.depends.mangoCommon,
       ),
     )
 
+//#endregion test modules
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// storage modules
+//#region core modules
 
-lazy val `mylib-docstore-embedded` = (project in file("./modules/storage/mylib-docstore-embedded")).
-    settings(build.scalaCommonSettings: _*).
-    settings(
-      name := "mylib-docstore-embedded",
-      libraryDependencies ++= Seq(
-        build.depends.circeCore,
-        build.depends.circeParser,
-        build.depends.circeGeneric,
-        build.depends.circeOptics,
-      ),
-    )
-
-lazy val `mylib-docstore-embedded-h2` = (project in file("./modules/storage/mylib-docstore-embedded-h2")).
-    settings(build.scalaCommonSettings: _*).
-    settings(
-      name := "mylib-docstore-embedded-h2",
-      libraryDependencies ++= Seq(
-        build.depends.h2,
-        build.depends.hikariCp % Test
-      ),
-    ).
-    dependsOn(
-      `mylib-docstore-embedded`,
-    )
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// core modules
-
-lazy val `mylib-core-infrastructure` = (project in file("./modules/core/mylib-core-infrastructure")).
+lazy val mylibCoreInfrastructure = (project in file("./modules/core/mylib-core-infrastructure")).
     settings(build.scalaCommonSettings: _*).
     settings(
       name := "mylib-core-infrastructure",
       libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
       ),
+    ).
+    dependsOn(
+      mylibTest % Test,
     )
 
-lazy val `mylib-web-play` = (project in file("./modules/web/mylib-web-play")).
+lazy val mylibCorePersistJdbc = (project in file("./modules/core/mylib-core-persist-jdbc")).
+    settings(build.scalaCommonSettings: _*).
+    settings(
+      name := "mylib-core-persist-jdbc",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+        build.depends.scalikejdbc,
+      ),
+    ).
+    dependsOn(
+      mylibCoreInfrastructure,
+    )
+
+lazy val mylibCorePersistH2 = (project in file("./modules/core/mylib-core-persist-h2")).
+    settings(build.scalaCommonSettings: _*).
+    settings(
+      name := "mylib-core-persist-h2",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+        build.depends.scalikejdbc,
+        build.depends.h2,
+      ),
+    ).
+    dependsOn(
+      mylibCoreInfrastructure,
+
+      mylibTest % Test,
+    )
+
+lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain")).
+    settings(build.scalaCommonSettings: _*).
+    settings(
+      name := "mylib-core-domain",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+      ),
+    ).
+    dependsOn(
+      mylibCoreInfrastructure,
+
+      mylibTest % Test,
+    )
+
+//#endregion core modules
+
+//#region web modules
+
+lazy val mylibWebPlay = (project in file("./modules/web/mylib-web-play")).
     enablePlugins(
       PlayScala,
     ).
@@ -58,8 +83,9 @@ lazy val `mylib-web-play` = (project in file("./modules/web/mylib-web-play")).
     settings(
       name := "mylib-web-play",
       libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
         guice,
-        build.depends.scalatestplusPlay,
+        build.depends.scalatestplusPlay % Test,
       ),
       // Adds additional packages into Twirl
       //TwirlKeys.templateImports += "com.agat.controllers._"
@@ -68,25 +94,30 @@ lazy val `mylib-web-play` = (project in file("./modules/web/mylib-web-play")).
       // play.sbt.routes.RoutesKeys.routesImport += "com.agat.binders._"
     ).
     dependsOn(
-      `mylib-core-infrastructure`,
+      mylibCoreInfrastructure,
+
+      mylibTest % Test,
     )
 
+//#endregion web modules
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// root module
+//#region root module
 
 lazy val mylib = (project in file(".")).
     settings(build.commonSettings: _*).
     settings(
-      name := "mylib",
+      name := "mylib-parent",
     ).
     aggregate(
-      `mylib-infrastructure`,
+      mylibTest,
 
-      `mylib-docstore-embedded`,
-      `mylib-docstore-embedded-h2`,
+      mylibCoreInfrastructure,
+      mylibCoreDomain,
+      mylibCorePersistJdbc,
+      mylibCorePersistH2,
 
-      `mylib-core-infrastructure`,
-
-      `mylib-web-play`,
+      mylibWebPlay,
     )
+
+//#endregion root module
+

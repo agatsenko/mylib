@@ -18,9 +18,11 @@ object build {
     val scalaLogging = "3.9.+"
     val janino = "3.0.+"
 
-    val mango = "0.2.+"
-
     val circe = "0.9.+"
+
+    val macwire = "2.3.+"
+
+    val mango = "0.2.+"
 
     val scalikejdbc = "3.3.+"
     val hikariCp = "2.7.+"
@@ -40,12 +42,17 @@ object build {
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % ver.scalaLogging
     val janio = "org.codehaus.janino" % "janino" % ver.janino
 
-    val mangoCommon = "io.mango" %% "mango-common" % ver.mango
-
     val circeCore = "io.circe" %% "circe-core" % ver.circe
     val circeGeneric = "io.circe" %% "circe-generic" % ver.circe
     val circeParser = "io.circe" %% "circe-parser" % ver.circe
     val circeOptics = "io.circe" %% "circe-optics" % ver.circe
+
+    val macwireMacros = "com.softwaremill.macwire" %% "macros" % ver.macwire
+    val macwireUtil = "com.softwaremill.macwire" %% "util" % ver.macwire
+
+    val mangoCommon = "io.mango" %% "mango-common" % ver.mango
+    val mangoServices = "io.mango" %% "mango-services" % ver.mango
+    val mangoServicesMacwire = "io.mango" %% "mango-services-macwire" % ver.mango
 
     val scalikejdbc = "org.scalikejdbc" %% "scalikejdbc" % ver.scalikejdbc
     val hikariCp = "com.zaxxer" % "HikariCP" % ver.hikariCp

@@ -63,6 +63,9 @@ lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain"))
       name := "mylib-core-domain",
       libraryDependencies ++= Seq(
         build.depends.mangoCommon,
+        build.depends.mangoServices,
+
+        build.depends.mangoServicesMacwire % Test,
       ),
     ).
     dependsOn(

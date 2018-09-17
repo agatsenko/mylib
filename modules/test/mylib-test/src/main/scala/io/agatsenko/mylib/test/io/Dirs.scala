@@ -4,9 +4,13 @@
   */
 package io.agatsenko.mylib.test.io
 
-import java.io.IOException
-import java.nio.file.{Files, FileVisitResult, Path, SimpleFileVisitor}
+import java.io.{BufferedInputStream, IOException}
+import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.StandardOpenOption._
+
+import io.mango.common.resource.using
 
 object Dirs {
   def newTmpDir(): Path = Files.createTempDirectory(null)
@@ -31,5 +35,30 @@ object Dirs {
         }
       )
     }
+  }
+
+  def getContentString(file: Path, charset: Charset = StandardCharsets.UTF_8): String = {
+    def append(sb: StringBuilder, bytes: Array[Byte], count: Int): Unit = {
+      if (count > 0) {
+        sb.append(new String(bytes, 0, count, charset))
+      }
+    }
+
+    val sb = StringBuilder.newBuilder
+    val bytes = new Array[Byte](256)
+    using(new BufferedInputStream(Files.newInputStream(file, READ))) { in =>
+      var b = -1
+      var readCount = 0
+      while ({b = in.read(); b > -1}) {
+        if (readCount >= bytes.length) {
+          append(sb, bytes, readCount)
+          readCount = 0
+        }
+        bytes(readCount) = b.toByte
+        readCount += 1
+      }
+      append(sb, bytes, readCount)
+    }
+    sb.toString()
   }
 }

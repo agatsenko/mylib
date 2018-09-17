@@ -5,6 +5,7 @@
 package io.agatsenko.mylib.test.io
 
 import java.io.BufferedOutputStream
+import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.StandardOpenOption._
 
@@ -43,6 +44,19 @@ class DirsTests extends FunSuite with Matchers {
     assert(!Files.exists(file))
 
     Files.delete(dir)
+  }
+
+  test("getContentString(file, charset) should long file content and return it as string") {
+    val dir = Dirs.newTmpDir()
+    val file = dir.resolve("test.txt")
+    val content = "line 1\nline 2"
+    val charset = StandardCharsets.UTF_8
+    using(new BufferedOutputStream(Files.newOutputStream(file, WRITE, CREATE_NEW))) { out =>
+      content.getBytes(charset).foreach(out.write(_))
+    }
+
+    val actualContent = Dirs.getContentString(file, charset)
+    assert(actualContent == content)
   }
 }
 

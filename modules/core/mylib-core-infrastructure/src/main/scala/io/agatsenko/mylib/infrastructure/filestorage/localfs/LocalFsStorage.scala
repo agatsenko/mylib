@@ -4,7 +4,7 @@
   */
 package io.agatsenko.mylib.infrastructure.filestorage.localfs
 
-import java.io.InputStream
+import java.io.{InputStream, IOException}
 import java.nio.file._
 import java.nio.file.StandardOpenOption._
 import java.nio.file.attribute.BasicFileAttributes
@@ -20,25 +20,29 @@ class LocalFsStorage private(val rootDir: Path) extends FileStorage {
   override type TPath = FsPath
   override type TFile = FsFile
 
-  private val rootDirStr = rootDir.toString
-
   Check.argNotNull(rootDir, "rootDir")
   Check.arg(rootDir.isAbsolute, s"rootDir ($rootDir) is not absolute")
   Check.arg(Files.exists(rootDir), s"rootDir ($rootDir) is not exist")
   Check.arg(Files.isDirectory(rootDir), s"rootDir ($rootDir) is not directory")
 
   override def toPath(path: String, morePaths: String*): FsPath = {
-    FsPath(Paths.get(rootDirStr, morePaths: _*))
+    FsPath(rootDir.resolve(Paths.get(path, morePaths: _*)))
   }
 
+  override def files: StorageFileIterator = new FsFileIterator
+
   override def exists(path: FsPath): Boolean = {
-    Files.exists(path.underlyingPath) && !Files.isDirectory(path.underlyingPath)
+    Files.exists(path.underlyingPath) &&
+    !Files.isDirectory(path.underlyingPath) &&
+    path.underlyingPath.startsWith(rootDir) &&
+    path.underlyingPath.getParent != rootDir &&
+    path.underlyingPath.getParent.getParent == rootDir
   }
 
   override def get(path: FsPath): Option[FsFile] = if (exists(path)) Some(FsFile(path)) else None
 
   override def putNew(fileName: String, in: InputStream): FsFile = {
-    val fileDirPath = rootDir.resolve(UUID.randomUUID().toString)
+    val fileDirPath = rootDir.resolve(UUID.randomUUID().toString.replace("-", ""))
     val filePath = fileDirPath.resolve(fileName)
     Files.createDirectory(fileDirPath)
     using(Files.newOutputStream(filePath, WRITE, CREATE_NEW)) { out =>
@@ -60,15 +64,29 @@ class LocalFsStorage private(val rootDir: Path) extends FileStorage {
 
   override def remove(path: FsPath): Boolean = {
     if (exists(path)) {
-      Files.delete(path.underlyingPath)
+      Files.walkFileTree(
+        path.underlyingPath.getParent,
+        new SimpleFileVisitor[Path] {
+          override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+            Files.delete(file)
+            FileVisitResult.CONTINUE
+          }
+
+          override def postVisitDirectory(dir: Path, ex: IOException): FileVisitResult = {
+            if (ex != null) {
+              throw ex
+            }
+            Files.delete(dir)
+            FileVisitResult.CONTINUE
+          }
+        }
+      )
       true
     }
     else {
       false
     }
   }
-
-  override protected def files: Iterator[TFile] = new FilesIterator
 
   case class FsPath private(underlyingPath: Path) extends StorageFilePath {
     val fileName: String = underlyingPath.getFileName.toString
@@ -78,19 +96,50 @@ class LocalFsStorage private(val rootDir: Path) extends FileStorage {
 
   case class FsFile private(path: FsPath) extends StorageFile {
     override def storage: LocalFsStorage = LocalFsStorage.this
+
+    override def toString: String = s"${getClass.getSimpleName}(${path.underlyingPath})"
+
+    override def inputStream: InputStream = Files.newInputStream(path.underlyingPath, READ)
   }
 
-  private class FilesIterator extends Iterator[FsFile] {
-    private val underlyingIter = Files.find(
+  private class FsFileIterator extends StorageFileIterator {
+    private val pathStream = Files.find(
       rootDir,
-      1,
-      (p: Path, a: BasicFileAttributes) => p.getParent != rootDir && !a.isDirectory,
+      2,
+      (p: Path, a: BasicFileAttributes) => {
+        !a.isDirectory && p.startsWith(rootDir) && p.getParent != rootDir && p.getParent.getParent == rootDir
+      },
       FileVisitOption.FOLLOW_LINKS
-    ).iterator()
+    )
 
-    override def hasNext: Boolean = underlyingIter.hasNext
+    private val pathIter = pathStream.iterator()
 
-    override def next(): FsFile = FsFile(FsPath(underlyingIter.next()))
+    private var closed = false
+
+    override def isClosed: Boolean = closed
+
+    override def close(): Unit = {
+      try {
+        pathStream.close()
+      }
+      finally {
+        closed = true
+      }
+    }
+
+    override def hasNext: Boolean = {
+      checkNotClosed()
+      pathIter.hasNext
+    }
+
+    override def next(): FsFile = {
+      checkNotClosed()
+      FsFile(FsPath(pathIter.next()))
+    }
+
+    private def checkNotClosed(): Unit = {
+      Check.state(!isClosed, "unable to perform operation because the iterator is closed")
+    }
   }
 }
 

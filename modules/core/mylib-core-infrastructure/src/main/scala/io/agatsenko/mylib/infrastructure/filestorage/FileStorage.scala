@@ -10,6 +10,8 @@ import scala.collection.generic.CanBuildFrom
 
 import java.io.InputStream
 
+import io.mango.common.resource.{using, CloseableResource}
+
 trait FileStorage {
   type TStorage <: FileStorage
   type TPath <: StorageFilePath
@@ -31,9 +33,15 @@ trait FileStorage {
     def path: TPath
 
     def name: String = path.fileName
+
+    def inputStream: InputStream
   }
 
+  trait StorageFileIterator extends Iterator[TFile] with CloseableResource
+
   def toPath(path: String, morePaths: String*): TPath
+
+  def files: StorageFileIterator
 
   def exists(path: TPath): Boolean
 
@@ -44,26 +52,32 @@ trait FileStorage {
   def get(path: String, morePaths: String*): Option[TFile] = get(toPath(path, morePaths: _*))
 
   def map[T, C[_]](f: TFile => T)(implicit cbf: CanBuildFrom[_, T, C[T]]): C[T] = {
-    val builder = cbf()
-    for (file <- files) {
-      builder += f(file)
+    using(files) { iter =>
+      val builder = cbf()
+      for (file <- iter) {
+        builder += f(file)
+      }
+      builder.result()
     }
-    builder.result()
   }
 
   def filter[C[_]](f: TFile => Boolean)(implicit cbf: CanBuildFrom[_, TFile, C[TFile]]): C[TFile] = {
-    val builder = cbf()
-    for (file <- files) {
-      if (f(file)) {
-        builder += file
+    using(files) { iter =>
+      val builder = cbf()
+      for (file <- iter) {
+        if (f(file)) {
+          builder += file
+        }
       }
+      builder.result()
     }
-    builder.result()
   }
 
   def foreach[U](f: TFile => U): Unit = {
-    for (file <- files) {
-      f(file)
+    using(files) { iter =>
+      for (file <- iter) {
+        f(file)
+      }
     }
   }
 
@@ -76,6 +90,4 @@ trait FileStorage {
   def remove(path: TPath): Boolean
 
   def remove(file: TFile): Boolean = remove(file.path)
-
-  protected def files: Iterator[TFile]
 }

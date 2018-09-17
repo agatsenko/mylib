@@ -103,9 +103,9 @@ trait FileStorage extends CloseableResource {
 
   def put(file: TFile, in: InputStream): Unit = put(file.path, in)
 
-  def put(uri: URI, in: InputStream): Unit = put(toPath(uri), in)
+  def put(uri: URI, in: InputStream): TFile = put(toPath(uri), in)
 
-  def put(uriStr: String, in: InputStream): Unit = put(toPath(uriStr), in)
+  def put(uriStr: String, in: InputStream): TFile = put(toPath(uriStr), in)
 
   def remove(path: TPath): Boolean
 

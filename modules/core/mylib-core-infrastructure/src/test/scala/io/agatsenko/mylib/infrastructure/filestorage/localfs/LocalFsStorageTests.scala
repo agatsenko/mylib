@@ -8,12 +8,12 @@ import scala.util.Try
 
 import java.io.{ByteArrayInputStream, InputStream}
 import java.net.URI
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.file.{Files, Path}
 import java.nio.file.StandardOpenOption._
 
 import io.agatsenko.mylib.test.io.Dirs
-import io.agatsenko.mylib.test.util.Generator.{newStr, newUuidStr}
+import io.agatsenko.mylib.test.util.Generator.newUuidStr
 import io.mango.common.resource.using
 import io.mango.common.util.TryExt
 import org.scalatest.{FunSuite, Matchers}
@@ -213,83 +213,210 @@ class LocalFsStorageTests extends FunSuite with Matchers {
   }
 
   test("put(path, inputStream) should update file if file exists in storage by specified path") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val srcContent = newFileContent
+      val newContent = newFileContent
+      val file = using(newFileInputStream(srcContent))(storage.putNew(fileName, _))
+
+      val actualFile = using(newFileInputStream(newContent))(storage.put(file.path, _))
+      assert(actualFile == file)
+
+      val actualContent = Dirs.getContentString(actualFile.path.fullNativePath)
+      assert(actualContent != srcContent)
+      assert(actualContent == newContent)
+    }
   }
 
   test("put(path, inputStream) should throw IllegalStateException if file does not exist in storage by specified path") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val newContent = newFileContent
+      val file = using(newFileInputStream(newFileContent))(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      intercept[IllegalStateException] {
+        using(newFileInputStream(newContent))(storage.put(file.path, _))
+      }
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("put(file, inputStream) should update file if file exists in storage by specified path") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val srcContent = newFileContent
+      val newContent = newFileContent
+      val file = using(newFileInputStream(srcContent))(storage.putNew(fileName, _))
+
+      using(newFileInputStream(newContent))(storage.put(file, _))
+
+      val actualContent = Dirs.getContentString(file.path.fullNativePath)
+      assert(actualContent != srcContent)
+      assert(actualContent == newContent)
+    }
   }
 
   test("put(file, inputStream) should throw IllegalStateException if file does not exist in storage") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val newContent = newFileContent
+      val file = using(newFileInputStream(newFileContent))(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      intercept[IllegalStateException] {
+        using(newFileInputStream(newContent))(storage.put(file, _))
+      }
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("put(uri, inputStream) should update file if file exists in storage by specified uri") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val srcContent = newFileContent
+      val newContent = newFileContent
+      val file = using(newFileInputStream(srcContent))(storage.putNew(fileName, _))
+
+      val actualFile = using(newFileInputStream(newContent))(storage.put(file.path.uri, _))
+      assert(actualFile == file)
+
+      val actualContent = Dirs.getContentString(actualFile.path.fullNativePath)
+      assert(actualContent != srcContent)
+      assert(actualContent == newContent)
+    }
   }
 
   test("put(uri, inputStream) should throw IllegalStateException if file does not exist in storage by specified uri") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val newContent = newFileContent
+      val file = using(newFileInputStream(newFileContent))(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      intercept[IllegalStateException] {
+        using(newFileInputStream(newContent))(storage.put(file.path.uri, _))
+      }
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("put(uriStr, inputStream) should update file if file exists in storage by specified uriStr") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val srcContent = newFileContent
+      val newContent = newFileContent
+      val file = using(newFileInputStream(srcContent))(storage.putNew(fileName, _))
+
+      val actualFile = using(newFileInputStream(newContent))(storage.put(file.path.uri.toString, _))
+      assert(actualFile == file)
+
+      val actualContent = Dirs.getContentString(actualFile.path.fullNativePath)
+      assert(actualContent != srcContent)
+      assert(actualContent == newContent)
+    }
   }
 
   test("put(uriStr, inputStream) should throw IllegalStateException if file does not exist in storage by specified uriStr") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val newContent = newFileContent
+      val file = using(newFileInputStream(newFileContent))(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      intercept[IllegalStateException] {
+        using(newFileInputStream(newContent))(storage.put(file.path.uri.toString, _))
+      }
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("remove(path) should remove file from storage and return true if file exists in storage by specified path") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+
+      assert(storage.remove(file.path))
+      assert(!storage.exists(file))
+      assert(!storage.exists(file.path))
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("remove(path) should return false if file does not exist in storage by specified path") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      assert(!storage.remove(file.path))
+    }
   }
 
   test("remove(file) should remove file from storage and return true if file exists in storage") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+
+      assert(storage.remove(file))
+      assert(!storage.exists(file))
+      assert(!storage.exists(file.path))
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("remove(file) should return false if file does not exist in storage") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      assert(!storage.remove(file))
+    }
   }
 
   test("remove(uri) should remove file from storage and return true if file exists in storage by specified uri") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+
+      assert(storage.remove(file.path.uri))
+      assert(!storage.exists(file))
+      assert(!storage.exists(file.path))
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("remove(uri) should return false if file does not exist in storage by specified uri") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      assert(!storage.remove(file.path.uri))
+    }
   }
 
   test("remove(uriStr) should remove file from storage and return true if file exists in storage by specified uriStr") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+
+      assert(storage.remove(file.path.uri.toString))
+      assert(!storage.exists(file))
+      assert(!storage.exists(file.path))
+      assert(!Files.exists(file.path.fullNativePath))
+    }
   }
 
   test("remove(uriStr) should return false if file does not exist in storage by specified uriStr") {
-    // FIXME: not yet implemented
-    ???
+    testWithStorage { implicit storage =>
+      val fileName = newUuidStr
+      val file = using(newFileInputStream)(storage.putNew(fileName, _))
+      Dirs.del(file.path.fullNativePath.getParent)
+
+      assert(!storage.remove(file.path.uri.toString))
+    }
   }
 
   def openStorage(): LocalFsStorage = LocalFsStorage.open(Dirs.newTmpDir())
@@ -310,8 +437,8 @@ class LocalFsStorageTests extends FunSuite with Matchers {
 
   def newFileContent: String = {
     val sb = StringBuilder.newBuilder
-    for (_ <- 1 to NEW_FILE_STR_COUNT) {
-      sb.append(newStr(NEW_FILE_STR_LENGTH)).append("\n")
+    for (_ <- 1 to NEW_FILE_LINE_COUNT) {
+      sb.append(newUuidStr).append("\n")
     }
     sb.toString()
   }
@@ -343,8 +470,7 @@ class LocalFsStorageTests extends FunSuite with Matchers {
 }
 
 object LocalFsStorageTests {
-  val NEW_FILE_STR_LENGTH = 3
-  val NEW_FILE_STR_COUNT = 2
+  val NEW_FILE_LINE_COUNT = 10
 
-  val defaultCharset = StandardCharsets.UTF_8
+  val defaultCharset: Charset = StandardCharsets.UTF_8
 }

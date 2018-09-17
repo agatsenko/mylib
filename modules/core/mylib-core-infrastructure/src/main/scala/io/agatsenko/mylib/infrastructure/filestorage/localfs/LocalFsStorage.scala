@@ -5,6 +5,7 @@
 package io.agatsenko.mylib.infrastructure.filestorage.localfs
 
 import java.io.{InputStream, IOException}
+import java.net.URI
 import java.nio.file._
 import java.nio.file.StandardOpenOption._
 import java.nio.file.attribute.BasicFileAttributes
@@ -16,56 +17,83 @@ import io.mango.common.resource.using
 import io.mango.common.util.Check
 
 class LocalFsStorage private(val rootDir: Path) extends FileStorage {
+  import LocalFsStorage._
+
   override type TStorage = LocalFsStorage
   override type TPath = FsPath
   override type TFile = FsFile
+
+  private var closed = false
 
   Check.argNotNull(rootDir, "rootDir")
   Check.arg(rootDir.isAbsolute, s"rootDir ($rootDir) is not absolute")
   Check.arg(Files.exists(rootDir), s"rootDir ($rootDir) is not exist")
   Check.arg(Files.isDirectory(rootDir), s"rootDir ($rootDir) is not directory")
 
-  override def toPath(path: String, morePaths: String*): FsPath = {
-    FsPath(rootDir.resolve(Paths.get(path, morePaths: _*)))
+  override def isClosed: Boolean = closed
+
+  override def close(): Unit = {
+    closed = true
   }
 
-  override def files: StorageFileIterator = new FsFileIterator
+  def newFileNativePath(fileName: String): Path = Paths.get(UUID.randomUUID().toString.replace("-", ""), fileName)
+
+  override def toUri(uriStr: String): URI = {
+    checkIsOpened()
+    Check.argNotNullOrEmpty(uriStr, "uriStr")
+
+    val uri = new URI(uriStr)
+    checkUri(uri)
+    uri
+  }
+
+  override def toPath(uri: URI): FsPath = {
+    checkIsOpened()
+    new FsPath(uri)
+  }
+
+  override def filesIterator: StorageFileIterator = {
+    checkIsOpened()
+    new FsFileIterator
+  }
 
   override def exists(path: FsPath): Boolean = {
-    Files.exists(path.underlyingPath) &&
-    !Files.isDirectory(path.underlyingPath) &&
-    path.underlyingPath.startsWith(rootDir) &&
-    path.underlyingPath.getParent != rootDir &&
-    path.underlyingPath.getParent.getParent == rootDir
+    checkIsOpened()
+    Files.exists(path.fullNativePath) && !Files.isDirectory(path.fullNativePath)
   }
 
-  override def get(path: FsPath): Option[FsFile] = if (exists(path)) Some(FsFile(path)) else None
+  override def get(path: FsPath): Option[FsFile] = {
+    checkIsOpened()
+    if (exists(path)) Some(FsFile(path)) else None
+  }
 
   override def putNew(fileName: String, in: InputStream): FsFile = {
-    val fileDirPath = rootDir.resolve(UUID.randomUUID().toString.replace("-", ""))
-    val filePath = fileDirPath.resolve(fileName)
-    Files.createDirectory(fileDirPath)
-    using(Files.newOutputStream(filePath, WRITE, CREATE_NEW)) { out =>
+    checkIsOpened()
+    val filePath = new FsPath(newFileNativePath(fileName))
+    Files.createDirectory(filePath.fullNativePath.getParent)
+    using(Files.newOutputStream(filePath.fullNativePath, WRITE, CREATE_NEW)) { out =>
       Streams.copy(in, out)
     }
-    FsFile(FsPath(filePath))
+    FsFile(filePath)
   }
 
   override def put(path: FsPath, in: InputStream): TFile = {
     import io.mango.common.util.OptionEx
 
+    checkIsOpened()
     get(path).map { file =>
-      using(Files.newOutputStream(file.path.underlyingPath, WRITE, TRUNCATE_EXISTING)) { out =>
+      using(Files.newOutputStream(file.path.fullNativePath, WRITE, TRUNCATE_EXISTING)) { out =>
         Streams.copy(in, out)
       }
       file
-    }.getOrThrow(new IllegalStateException(s"'${path.underlyingPath}' file is not found"))
+    }.getOrThrow(new IllegalStateException(s"'${path.uri}' file is not found"))
   }
 
   override def remove(path: FsPath): Boolean = {
+    checkIsOpened()
     if (exists(path)) {
       Files.walkFileTree(
-        path.underlyingPath.getParent,
+        path.fullNativePath.getParent,
         new SimpleFileVisitor[Path] {
           override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
             Files.delete(file)
@@ -88,26 +116,48 @@ class LocalFsStorage private(val rootDir: Path) extends FileStorage {
     }
   }
 
-  case class FsPath private(underlyingPath: Path) extends StorageFilePath {
-    val fileName: String = underlyingPath.getFileName.toString
-
-    override def storage: LocalFsStorage = LocalFsStorage.this
+  private def checkIsOpened(): Unit = {
+    Check.state(isOpened, "unable to perform operation because the storage is closed")
   }
 
-  case class FsFile private(path: FsPath) extends StorageFile {
+  case class FsPath private[LocalFsStorage](override val uri: URI, fullNativePath: Path) extends StorageFilePath {
+    def this(uri: URI) {
+      this(uri, rootDir.resolve(resolveNativePath(uri)))
+    }
+
+    def this(nativePath: Path) {
+      this(resolveUri(nativePath), rootDir.resolve(nativePath))
+    }
+
+    override val fileName: String = fullNativePath.getFileName.toString
+
     override def storage: LocalFsStorage = LocalFsStorage.this
 
-    override def toString: String = s"${getClass.getSimpleName}(${path.underlyingPath})"
+    override def toString: String = s"${getClass.getSimpleName}($uri)"
+  }
 
-    override def inputStream: InputStream = Files.newInputStream(path.underlyingPath, READ)
+  case class FsFile private[LocalFsStorage](path: FsPath) extends StorageFile {
+    override def storage: LocalFsStorage = LocalFsStorage.this
+
+    override def inputStream: InputStream = {
+      checkIsOpened()
+      Files.newInputStream(path.fullNativePath, READ)
+    }
+
+    override def toString: String = s"${getClass.getSimpleName}(${path.uri})"
   }
 
   private class FsFileIterator extends StorageFileIterator {
+    LocalFsStorage.this.checkIsOpened()
+
     private val pathStream = Files.find(
       rootDir,
       2,
       (p: Path, a: BasicFileAttributes) => {
-        !a.isDirectory && p.startsWith(rootDir) && p.getParent != rootDir && p.getParent.getParent == rootDir
+        !a.isDirectory &&
+        p.startsWith(rootDir) &&
+        p != rootDir &&
+        rootDir.relativize(p).getNameCount == NATIVE_PATH_NAME_COUNT
       },
       FileVisitOption.FOLLOW_LINKS
     )
@@ -116,38 +166,72 @@ class LocalFsStorage private(val rootDir: Path) extends FileStorage {
 
     private var closed = false
 
-    override def isClosed: Boolean = closed
+    override def isClosed: Boolean = LocalFsStorage.this.isClosed || closed
 
     override def close(): Unit = {
-      try {
-        pathStream.close()
-      }
-      finally {
-        closed = true
+      if (!closed) {
+        try {
+          pathStream.close()
+        }
+        finally {
+          closed = true
+        }
       }
     }
 
     override def hasNext: Boolean = {
-      checkNotClosed()
+      checkIsOpened()
       pathIter.hasNext
     }
 
     override def next(): FsFile = {
-      checkNotClosed()
-      FsFile(FsPath(pathIter.next()))
+      checkIsOpened()
+      FsFile(new FsPath(rootDir.relativize(pathIter.next())))
     }
 
-    private def checkNotClosed(): Unit = {
+    private def checkIsOpened(): Unit = {
       Check.state(!isClosed, "unable to perform operation because the iterator is closed")
     }
   }
 }
 
 object LocalFsStorage {
-  def apply(rootDir: Path): LocalFsStorage = {
+  private[localfs] val URI_SCHEMA = "localfs"
+  private[localfs] val NATIVE_PATH_NAME_COUNT = 2
+
+  def open(rootDir: Path): LocalFsStorage = {
     Check.argNotNull(rootDir, "rootDir")
     new LocalFsStorage(rootDir.toAbsolutePath)
   }
 
-  def apply(rootDir: String): FileStorage = apply(Paths.get(rootDir))
+  def open(rootDir: String): FileStorage = open(Paths.get(rootDir))
+
+  private def checkUri(uri: URI): Unit = {
+    Check.argNotNull(uri, "uri")
+    Check.arg(uri.getScheme == URI_SCHEMA, "uriStr contains invalid schema")
+    Check.arg(uri.getHost != null, "uriStr does not contain host")
+    Check.arg(uri.getPort == -1, "uriStr contains port")
+    Check.arg(uri.getRawQuery == null, "uriStr contains query")
+    Check.arg(uri.getRawFragment == null, "uriStr contains fragment")
+    Check.arg(uri.getPath != null, "uriStr does not contain path")
+  }
+
+  private def checkNativePath(path: Path): Unit = {
+    Check.argNotNull(path, "path")
+    Check.arg(!path.isAbsolute, "path is absolute")
+    Check.arg(path.getNameCount == NATIVE_PATH_NAME_COUNT, "path name count is invalid")
+  }
+
+  private def resolveNativePath(uri: URI): Path = {
+    checkUri(uri)
+
+    val path = Paths.get(uri.getHost, uri.getPath)
+    Check.arg(path.getNameCount == NATIVE_PATH_NAME_COUNT, "uri contains invalid path")
+    path
+  }
+
+  private def resolveUri(path: Path): URI = {
+    checkNativePath(path)
+    new URI(URI_SCHEMA, path.getParent.toString, "/" + path.getFileName.toString, null)
+  }
 }

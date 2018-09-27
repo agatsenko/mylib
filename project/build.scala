@@ -9,7 +9,8 @@ object build {
 
   object ver {
     val java = "1.8"
-    val crossScala = Seq("2.11.12", "2.12.6")
+//    val crossScala = Seq("2.11.12", "2.12.6")
+    val crossScala = Seq("2.12.6")
 
     val enumeratum = "1.5.+"
 
@@ -18,12 +19,12 @@ object build {
     val scalaLogging = "3.9.+"
     val janino = "3.0.+"
 
+    val monix = "2.3.+"
     val circe = "0.9.+"
-
     val macwire = "2.3.+"
+    val mango = "0.+"
 
-    val mango = "0.2.+"
-
+    val mongoScala = "2.4.+"
     val scalikejdbc = "3.3.+"
     val hikariCp = "2.7.+"
     val h2 = "1.4.+"
@@ -42,6 +43,8 @@ object build {
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % ver.scalaLogging
     val janio = "org.codehaus.janino" % "janino" % ver.janino
 
+    val monix = "io.monix" %% "monix" % ver.monix
+
     val circeCore = "io.circe" %% "circe-core" % ver.circe
     val circeGeneric = "io.circe" %% "circe-generic" % ver.circe
     val circeParser = "io.circe" %% "circe-parser" % ver.circe
@@ -54,6 +57,7 @@ object build {
     val mangoServices = "io.mango" %% "mango-services" % ver.mango
     val mangoServicesMacwire = "io.mango" %% "mango-services-macwire" % ver.mango
 
+    val mongoScalaDriver = "org.mongodb.scala" %% "mongo-scala-driver" % ver.mongoScala
     val scalikejdbc = "org.scalikejdbc" %% "scalikejdbc" % ver.scalikejdbc
     val hikariCp = "com.zaxxer" % "HikariCP" % ver.hikariCp
     val h2 = "com.h2database" % "h2" % ver.h2

@@ -8,7 +8,7 @@
 
   <if condition='isNull("LOG_FILE")'>
     <then>
-      <property name="LOG_FILE" value="target/logs/tests-${TIMESTAMP}.log"/>
+      <property name="LOG_FILE" value="target/.logs/tests-${TIMESTAMP}.log"/>
       <property name="LOG_FILE_APPEND" value="true"/>
     </then>
     <else>

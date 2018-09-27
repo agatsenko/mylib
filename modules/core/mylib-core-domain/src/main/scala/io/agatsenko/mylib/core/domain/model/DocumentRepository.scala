@@ -4,10 +4,12 @@
   */
 package io.agatsenko.mylib.core.domain.model
 
+import scala.concurrent.Future
+
 trait DocumentRepository {
-  def newId: DocumentId
+  def newId: Future[DocumentId]
 
-  def get(id: DocumentId): Option[Document]
+  def get(id: DocumentId): Future[Option[Document]]
 
-  def save(doc: Document): Document
+  def save(doc: Document): Future[Document]
 }

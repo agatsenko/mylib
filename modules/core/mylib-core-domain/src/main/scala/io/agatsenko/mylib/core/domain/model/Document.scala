@@ -31,7 +31,9 @@ class Document private(
 object Document {
   def apply(title: String, description: Option[String] = None): Document = {
     val repo = Services.get[DocumentRepository].get
-    new Document(repo.newId, EntityVersion(), title, description)
+//    new Document(repo.newId, EntityVersion(), title, description)
+    // FIXME: not yet implemented
+    ???
   }
 
   def apply(id: DocumentId, persistedVersion: Long, title: String, description: Option[String]): Document = {

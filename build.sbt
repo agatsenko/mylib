@@ -22,16 +22,44 @@ lazy val mylibCoreInfrastructure = (project in file("./modules/core/mylib-core-i
       name := "mylib-core-infrastructure",
       libraryDependencies ++= Seq(
         build.depends.mangoCommon,
+        // TODO: review the need for this library in the module
+        build.depends.monix,
       ),
     ).
     dependsOn(
       mylibTest % Test,
     )
 
-lazy val mylibCorePersistJdbc = (project in file("./modules/core/mylib-core-persist-jdbc")).
+lazy val mylibCorePersist = (project in file("./modules/core/mylib-core-persist")).
     settings(build.scalaCommonSettings: _*).
     settings(
-      name := "mylib-core-persist-jdbc",
+      name := "mylib-core-persist",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+      ),
+    ).
+    dependsOn(
+      mylibCoreInfrastructure,
+    )
+
+lazy val mylibCoreMongo = (project in file("./modules/core/mylib-core-mongo")).
+    settings(build.scalaCommonSettings: _*).
+    settings(
+      name := "mylib-core-mongo",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+        build.depends.mongoScalaDriver,
+      ),
+    ).
+    dependsOn(
+      mylibCoreInfrastructure,
+      mylibCorePersist,
+    )
+
+lazy val mylibCoreJdbc = (project in file("./modules/core/mylib-core-jdbc")).
+    settings(build.scalaCommonSettings: _*).
+    settings(
+      name := "mylib-core-jdbc",
       libraryDependencies ++= Seq(
         build.depends.mangoCommon,
         build.depends.scalikejdbc,
@@ -39,12 +67,13 @@ lazy val mylibCorePersistJdbc = (project in file("./modules/core/mylib-core-pers
     ).
     dependsOn(
       mylibCoreInfrastructure,
+      mylibCorePersist,
     )
 
-lazy val mylibCorePersistH2 = (project in file("./modules/core/mylib-core-persist-h2")).
+lazy val mylibCoreH2 = (project in file("./modules/core/mylib-core-h2")).
     settings(build.scalaCommonSettings: _*).
     settings(
-      name := "mylib-core-persist-h2",
+      name := "mylib-core-h2",
       libraryDependencies ++= Seq(
         build.depends.mangoCommon,
         build.depends.scalikejdbc,
@@ -53,6 +82,7 @@ lazy val mylibCorePersistH2 = (project in file("./modules/core/mylib-core-persis
     ).
     dependsOn(
       mylibCoreInfrastructure,
+      mylibCorePersist,
 
       mylibTest % Test,
     )
@@ -116,11 +146,12 @@ lazy val mylib = (project in file(".")).
 
       mylibCoreInfrastructure,
       mylibCoreDomain,
-      mylibCorePersistJdbc,
-      mylibCorePersistH2,
+      mylibCorePersist,
+      mylibCoreMongo,
+      mylibCoreJdbc,
+      mylibCoreH2,
 
       mylibWebPlay,
     )
 
 //#endregion root module
-

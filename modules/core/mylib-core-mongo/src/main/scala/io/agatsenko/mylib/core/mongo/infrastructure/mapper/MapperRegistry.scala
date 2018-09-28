@@ -30,7 +30,7 @@ object MapperRegistry {
   class Builder private[MapperRegistry]() {
     private val mappers = mutable.Map[Class[_], Mapper[_]]()
 
-    def contains(entityType: Class[_]): Boolean = mappers.contains(entityType)
+    def contains(valueType: Class[_]): Boolean = mappers.contains(valueType)
 
     def contains[T: ClassTag]: Boolean = contains(classTag[T].runtimeClass)
 
@@ -55,10 +55,6 @@ object MapperRegistry {
       this
     }
 
-    def build(): MapperRegistry = {
-      val mappersBuilder = Map.newBuilder[Class[_], Mapper[_]]
-      mappers.foreach(mappersBuilder += _)
-      new DefaultMapperRegistry(mappersBuilder.result())
-    }
+    def build(): MapperRegistry = new DefaultMapperRegistry(mappers.toMap)
   }
 }

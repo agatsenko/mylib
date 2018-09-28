@@ -22,11 +22,27 @@ lazy val mylibCoreInfrastructure = (project in file("./modules/core/mylib-core-i
       name := "mylib-core-infrastructure",
       libraryDependencies ++= Seq(
         build.depends.mangoCommon,
-        // TODO: review the need for this library in the module
-        build.depends.monix,
       ),
     ).
     dependsOn(
+      mylibTest % Test,
+    )
+
+lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain")).
+    settings(build.scalaCommonSettings: _*).
+    settings(
+      name := "mylib-core-domain",
+      libraryDependencies ++= Seq(
+        build.depends.monix,
+        build.depends.mangoCommon,
+        build.depends.mangoServices,
+
+        build.depends.mangoServicesMacwire % Test,
+      ),
+    ).
+    dependsOn(
+      mylibCoreInfrastructure,
+
       mylibTest % Test,
     )
 
@@ -47,6 +63,7 @@ lazy val mylibCoreMongo = (project in file("./modules/core/mylib-core-mongo")).
     settings(
       name := "mylib-core-mongo",
       libraryDependencies ++= Seq(
+        build.depends.monix,
         build.depends.mangoCommon,
         build.depends.mongoScalaDriver,
       ),
@@ -83,23 +100,6 @@ lazy val mylibCoreH2 = (project in file("./modules/core/mylib-core-h2")).
     dependsOn(
       mylibCoreInfrastructure,
       mylibCorePersist,
-
-      mylibTest % Test,
-    )
-
-lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain")).
-    settings(build.scalaCommonSettings: _*).
-    settings(
-      name := "mylib-core-domain",
-      libraryDependencies ++= Seq(
-        build.depends.mangoCommon,
-        build.depends.mangoServices,
-
-        build.depends.mangoServicesMacwire % Test,
-      ),
-    ).
-    dependsOn(
-      mylibCoreInfrastructure,
 
       mylibTest % Test,
     )

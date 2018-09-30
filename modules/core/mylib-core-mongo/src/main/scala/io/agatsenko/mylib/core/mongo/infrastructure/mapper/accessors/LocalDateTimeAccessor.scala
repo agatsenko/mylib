@@ -8,13 +8,18 @@ import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.FieldAccessor
 import org.bson.{BsonDateTime, BsonDocument}
+import org.mongodb.scala.bson.BsonValue
 
 class LocalDateTimeAccessor extends FieldAccessor[LocalDateTime] {
-  override def set(doc: BsonDocument, name: String, value: LocalDateTime): Unit = {
-    doc.put(name, new BsonDateTime(value.toInstant(ZoneOffset.UTC).toEpochMilli))
-  }
+  override def from(bson: BsonValue): LocalDateTime = getValue(bson.asDateTime())
 
-  override def get(doc: BsonDocument, name: String): LocalDateTime = {
-    LocalDateTime.ofInstant(Instant.ofEpochMilli(doc.getDateTime(name).getValue), ZoneOffset.UTC)
+  override def to(value: LocalDateTime): BsonValue = new BsonDateTime(value.toInstant(ZoneOffset.UTC).toEpochMilli)
+
+  override def set(doc: BsonDocument, name: String, value: LocalDateTime): Unit = doc.put(name, to(value))
+
+  override def get(doc: BsonDocument, name: String): LocalDateTime = getValue(doc.getDateTime(name))
+
+  def getValue(bson: BsonDateTime): LocalDateTime = {
+    LocalDateTime.ofInstant(Instant.ofEpochMilli(bson.getValue), ZoneOffset.UTC)
   }
 }

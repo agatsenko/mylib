@@ -8,9 +8,12 @@ import java.util.UUID
 
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.FieldAccessor
 import org.bson.{BsonBinary, BsonBinarySubType, BsonDocument}
+import org.mongodb.scala.bson.BsonValue
 
 class UuidAccessor extends FieldAccessor[UUID] {
-  override def set(doc: BsonDocument, name: String, value: UUID): Unit = {
+  override def from(bson: BsonValue): UUID = getValue(bson.asBinary())
+
+  override def to(value: UUID): BsonValue = {
     val uuidBytes = new Array[Byte](16)
 
     var lsb = value.getLeastSignificantBits
@@ -25,11 +28,15 @@ class UuidAccessor extends FieldAccessor[UUID] {
       msb >>= 8
     }
 
-    doc.put(name, new BsonBinary(BsonBinarySubType.UUID_STANDARD, uuidBytes))
+    new BsonBinary(BsonBinarySubType.UUID_STANDARD, uuidBytes)
   }
 
-  override def get(doc: BsonDocument, name: String): UUID = {
-    val uuidBytes = doc.getBinary(name).getData
+  override def set(doc: BsonDocument, name: String, value: UUID): Unit = doc.put(name, to(value))
+
+  override def get(doc: BsonDocument, name: String): UUID = getValue(doc.getBinary(name))
+
+  private def getValue(bson: BsonBinary): UUID = {
+    val uuidBytes = bson.getData
 
     var lsb = 0L
     for (i <- 8 to 15) {

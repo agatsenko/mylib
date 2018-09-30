@@ -10,4 +10,16 @@ trait VersionedEntity[TId] extends Entity[TId] {
   def isTransient: Boolean = version.isTransient
 
   def hasChanges: Boolean = version.hasChanges
+
+  override def equals(any: Any): Boolean = {
+    if (super.equals(any)) {
+      val versionedEntity = any.asInstanceOf[VersionedEntity[TId]]
+      version == versionedEntity.version
+    }
+    else {
+      false
+    }
+  }
+
+  override def hashCode(): Int = id.hashCode() ^ version.hashCode()
 }

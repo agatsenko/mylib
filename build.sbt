@@ -33,7 +33,7 @@ lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain"))
     settings(
       name := "mylib-core-domain",
       libraryDependencies ++= Seq(
-        build.depends.scalaAsync,
+        build.depends.monix,
         build.depends.mangoCommon,
         build.depends.mangoServices,
 
@@ -63,6 +63,7 @@ lazy val mylibCoreMongo = (project in file("./modules/core/mylib-core-mongo")).
     settings(
       name := "mylib-core-mongo",
       libraryDependencies ++= Seq(
+        build.depends.monix,
         build.depends.mangoCommon,
         build.depends.mongoScalaDriver,
       ),

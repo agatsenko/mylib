@@ -4,14 +4,24 @@
   */
 package io.agatsenko.mylib.core.mongo.infrastructure.mapper
 
+import scala.language.higherKinds
+
+import scala.collection.generic.CanBuildFrom
+
 import java.time._
 import java.util.UUID
 
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.accessors._
-import org.bson.BsonDocument
+import io.mango.common.util.Check
+import org.bson.{BsonDocument, BsonNull}
 import org.bson.types.ObjectId
+import org.mongodb.scala.bson.{BsonArray, BsonValue}
 
 trait FieldAccessor[T] {
+  def from(bson: BsonValue): T
+
+  def to(value: T): BsonValue
+
   def set(doc: BsonDocument, name: String, value: T): Unit
 
   def get(doc: BsonDocument, name: String): T
@@ -19,6 +29,34 @@ trait FieldAccessor[T] {
 
 object FieldAccessor {
   val ID_FIELD_NAME = "_id"
+
+  def getArray[T, C[_]](
+      doc: BsonDocument,
+      fieldName: String)(
+      implicit accessor: FieldAccessor[T],
+      cbf: CanBuildFrom[Nothing, T, C[T]]): C[T] = {
+    Check.argNotNull(doc, "doc")
+    val collBuilder = cbf()
+    doc.getArray(fieldName).forEach(bsonValue => collBuilder += accessor.from(bsonValue))
+    collBuilder.result()
+  }
+
+  def setArray[T](
+      doc: BsonDocument,
+      fieldName: String,
+      coll: Iterable[T])(
+      implicit accessor: FieldAccessor[T]): Unit = {
+    Check.argNotNull(doc, "doc")
+    Check.argNotNull(coll, "coll")
+    val array = new BsonArray
+    coll.foreach(value => array.add(accessor.to(value)))
+    doc.put(fieldName, array)
+  }
+
+  def setNull(doc: BsonDocument, fieldName: String): Unit = {
+    Check.argNotNull(doc, "doc")
+    doc.put(fieldName, BsonNull.VALUE)
+  }
 
   object Implicit {
     implicit val booleanAccessor: FieldAccessor[Boolean] = new BooleanAccessor

@@ -12,14 +12,14 @@ object build {
 //    val crossScala = Seq("2.11.12", "2.12.6")
     val crossScala = Seq("2.12.6")
 
-    val scalaAsync = "0.9.7"
-    val enumeratum = "1.5.+"
+        val enumeratum = "1.5.+"
 
     val slf4j = "1.7.+"
     val logback = "1.2.+"
     val scalaLogging = "3.9.+"
     val janino = "3.0.+"
 
+    val monix = "2.3.+"
     val circe = "0.9.+"
     val macwire = "2.3.+"
     val mango = "0.+"
@@ -36,13 +36,14 @@ object build {
   object depends {
     val scalaLib = "org.scala-lang" % "scala-library"
 
-    val scalaAsync = "org.scala-lang.modules" %% "scala-async" % ver.scalaAsync
     val enumeratum = "com.beachape" %% "enumeratum" % ver.enumeratum
 
     val slf4jApi = "org.slf4j" % "slf4j-api" % ver.slf4j
     val logbackClassic = "ch.qos.logback" % "logback-classic" % ver.logback
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % ver.scalaLogging
     val janio = "org.codehaus.janino" % "janino" % ver.janino
+
+    val monix = "io.monix" %% "monix" % ver.monix
 
     val circeCore = "io.circe" %% "circe-core" % ver.circe
     val circeGeneric = "io.circe" %% "circe-generic" % ver.circe

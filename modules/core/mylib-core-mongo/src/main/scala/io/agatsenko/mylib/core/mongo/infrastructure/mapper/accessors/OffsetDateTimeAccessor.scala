@@ -8,15 +8,20 @@ import java.time.{Instant, OffsetDateTime, ZoneId}
 
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.FieldAccessor
 import org.bson.{BsonDateTime, BsonDocument}
+import org.mongodb.scala.bson.BsonValue
 
 class OffsetDateTimeAccessor extends FieldAccessor[OffsetDateTime] {
   private val systemZoneId = ZoneId.systemDefault()
 
-  override def set(doc: BsonDocument, name: String, value: OffsetDateTime): Unit = {
-    doc.put(name, new BsonDateTime(value.toInstant.toEpochMilli))
-  }
+  override def from(bson: BsonValue): OffsetDateTime = getValue(bson.asDateTime())
 
-  override def get(doc: BsonDocument, name: String): OffsetDateTime = {
-    OffsetDateTime.ofInstant(Instant.ofEpochMilli(doc.getDateTime(name).getValue), systemZoneId)
+  override def to(value: OffsetDateTime): BsonValue = new BsonDateTime(value.toInstant.toEpochMilli)
+
+  override def set(doc: BsonDocument, name: String, value: OffsetDateTime): Unit = doc.put(name, to(value))
+
+  override def get(doc: BsonDocument, name: String): OffsetDateTime = getValue(doc.getDateTime(name))
+
+  private def getValue(bson: BsonDateTime): OffsetDateTime = {
+    OffsetDateTime.ofInstant(Instant.ofEpochMilli(bson.getValue), systemZoneId)
   }
 }

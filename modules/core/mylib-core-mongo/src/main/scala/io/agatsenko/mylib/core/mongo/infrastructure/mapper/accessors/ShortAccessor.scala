@@ -7,10 +7,16 @@ package io.agatsenko.mylib.core.mongo.infrastructure.mapper.accessors
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.FieldAccessor
 import io.mango.common.util.SimpleValExt.IntExt
 import org.bson.BsonDocument
-import org.mongodb.scala.bson.BsonInt32
+import org.mongodb.scala.bson.{BsonInt32, BsonValue}
 
 class ShortAccessor extends FieldAccessor[Short] {
-  override def set(doc: BsonDocument, name: String, value: Short): Unit = doc.put(name, new BsonInt32(value))
+  override def from(bson: BsonValue): Short = getValue(bson.asInt32())
 
-  override def get(doc: BsonDocument, name: String): Short = doc.getInt32(name).getValue.toShortExact
+  override def to(value: Short): BsonValue = new BsonInt32(value)
+
+  override def set(doc: BsonDocument, name: String, value: Short): Unit = doc.put(name, to(value))
+
+  override def get(doc: BsonDocument, name: String): Short = getValue(doc.getInt32(name))
+
+  private def getValue(bson: BsonInt32): Short = bson.getValue.toShortExact
 }

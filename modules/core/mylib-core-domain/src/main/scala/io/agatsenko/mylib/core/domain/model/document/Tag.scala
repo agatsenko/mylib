@@ -24,7 +24,9 @@ trait TagRepository {
 class Tag private(
     val id: TagId,
     val version: EntityVersion,
-    val taggedDocuments: Set[DocumentId]) extends VersionedEntity[TagId] {
+    val taggedDocuments: Set[DocumentId]) extends VersionedEntity[Tag] {
+  type TId = TagId
+
   Check.argNotNull(id, "id")
   Check.argNotNull(version, "version")
   Check.argNotNull(taggedDocuments, "taggedDocuments")
@@ -32,19 +34,33 @@ class Tag private(
   def name: String = id.tagName
 
   def modify(taggedDocuments: Set[DocumentId] = this.taggedDocuments): Tag = {
-    if (taggedDocuments == this.taggedDocuments) this else new Tag(id, version.incrementIfUnchanged, taggedDocuments)
+    copy(taggedDocuments = taggedDocuments)
   }
 
   def addDocuments(documents: DocumentId*): Tag = {
-    modify(taggedDocuments = taggedDocuments ++ documents)
+    Check.argNotNull(documents, "documents")
+    copy(taggedDocuments = taggedDocuments ++ documents)
   }
 
   def removeDocuments(documents: DocumentId*): Tag = {
     Check.argNotNull(documents, "documents")
-    modify(taggedDocuments = taggedDocuments -- documents)
+    copy(taggedDocuments = taggedDocuments -- documents)
   }
 
+  def acceptChanges: Tag = copy(version = version.acceptChanges)
+
   override def toString: String = ToStringHelper(this).addAll(id -> "id", version -> "version").toString
+
+  private def copy(
+      version: EntityVersion = this.version,
+      taggedDocuments: Set[DocumentId] = this.taggedDocuments): Tag = {
+    if (version == this.version && taggedDocuments == this.taggedDocuments) {
+      this
+    }
+    else {
+      new Tag(id, version, taggedDocuments)
+    }
+  }
 }
 
 object Tag {

@@ -5,7 +5,9 @@
 package io.agatsenko.mylib.core.mongo.infrastructure.mapper
 
 trait Mapper[T] {
-  def write(entity: T, context: MapperContext): Unit
+  def writeInsert(entity: T, context: MapperContext): Unit
+
+  def writeUpdate(entity: T, context: MapperContext): Unit
 
   def read(context: MapperContext): T
 }

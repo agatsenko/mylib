@@ -4,16 +4,20 @@
   */
 package io.agatsenko.mylib.core.infrastructure.domain
 
-trait VersionedEntity[TId] extends Entity[TId] {
+trait VersionedEntity[TSelf] extends Entity {
+  this: TSelf =>
+
   def version: EntityVersion
 
   def isTransient: Boolean = version.isTransient
 
   def hasChanges: Boolean = version.hasChanges
 
+  def acceptChanges: TSelf
+
   override def equals(any: Any): Boolean = {
     if (super.equals(any)) {
-      val versionedEntity = any.asInstanceOf[VersionedEntity[TId]]
+      val versionedEntity = any.asInstanceOf[VersionedEntity[TSelf]]
       version == versionedEntity.version
     }
     else {

@@ -9,6 +9,7 @@ import scala.reflect.{classTag, ClassTag}
 
 import io.mango.common.util.Check
 import org.bson.codecs.configuration.{CodecProvider, CodecRegistries, CodecRegistry}
+import org.mongodb.scala.bson.BsonDocument
 
 trait MapperRegistry {
   def isRegistered(valueType: Class[_]): Boolean
@@ -19,9 +20,26 @@ trait MapperRegistry {
 
   def getMapper[T: ClassTag]: Mapper[T] = getMapper(classTag[T].runtimeClass.asInstanceOf[Class[T]])
 
+  def createInsertDocument[T](valueType: Class[T], value: T): BsonDocument
+
+  def createInsertDocument[T](value: T): BsonDocument = createDocument(value, createInsertDocument[T])
+
+  def createUpdateDocument[T](valueType: Class[T], value: T): BsonDocument
+
+  def createUpdateDocument[T](value: T): BsonDocument = createDocument(value, createUpdateDocument[T])
+
   def buildCodecProviders: Seq[CodecProvider]
 
   def buildCodecRegistry: CodecRegistry = CodecRegistries.fromProviders(buildCodecProviders: _*)
+
+  private def createDocument[T](valueType: Class[T], value: T, create: (Class[T], T) => BsonDocument): BsonDocument = {
+    create(valueType, value)
+  }
+
+  private def createDocument[T](value: T, create: (Class[T], T) => BsonDocument): BsonDocument = {
+    Check.argNotNull(value, "value")
+    createDocument(value.getClass.asInstanceOf[Class[T]], value, create)
+  }
 }
 
 object MapperRegistry {

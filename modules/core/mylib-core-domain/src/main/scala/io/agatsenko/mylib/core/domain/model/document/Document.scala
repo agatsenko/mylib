@@ -31,7 +31,9 @@ class Document private(
     val title: String,
     val description: Option[String],
     val authors: Set[AuthorId],
-    val tags: Set[TagId]) extends VersionedEntity[DocumentId] {
+    val tags: Set[TagId]) extends VersionedEntity[Document] {
+  type TId = DocumentId
+
   Check.argNotNull(id, "id")
   Check.argNotNull(version, "version")
   Check.argNotNullOrEmpty(title, "title")
@@ -39,17 +41,14 @@ class Document private(
   Check.argNotNull(authors, "authors")
   Check.argNotNull(tags, "tags")
 
+  def tagNames: Set[String] = tags.map(_.tagName)
+
   def modify(
       title: String = this.title,
       description: Option[String] = this.description,
       authors: Set[AuthorId] = this.authors,
       tags: Set[TagId] = this.tags): Document = {
-    if (title == this.title && description == this.description && authors == this.authors && tags == this.tags ) {
-      this
-    }
-    else {
-      new Document(id, version.incrementIfUnchanged, title, description, authors, tags)
-    }
+    copy(title = title, description = description, authors = authors, tags = tags)
   }
 
   def addAuthors(authors: AuthorId*): Document = {
@@ -76,10 +75,30 @@ class Document private(
 
   def clearTags: Document = modify(tags = Set.empty)
 
+  override def acceptChanges: Document = copy(version = version.acceptChanges)
+
   override def toString: String = {
     ToStringHelper(this).
         addAll(id -> "id", version -> "version", title -> "title", description -> "description", tags -> "tags").
         toString
+  }
+
+  private def copy(
+      version: EntityVersion = this.version,
+      title: String = this.title,
+      description: Option[String] = this.description,
+      authors: Set[AuthorId] = this.authors,
+      tags: Set[TagId] = this.tags): Document = {
+    if (version == this.version &&
+        title == this.title &&
+        description == this.description &&
+        authors == this.authors &&
+        tags == this.tags) {
+      this
+    }
+    else {
+      new Document(id, version.incrementIfUnchanged, title, description, authors, tags)
+    }
   }
 }
 

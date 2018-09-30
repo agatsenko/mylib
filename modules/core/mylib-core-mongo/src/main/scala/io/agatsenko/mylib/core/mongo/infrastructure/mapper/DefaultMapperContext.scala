@@ -51,7 +51,7 @@ private[mapper] class DefaultMapperContext(
   private def createDocument[T](mapper: Mapper[T], value: T): BsonDocument = {
     Check.argNotNull(value, "value")
     val doc = new BsonDocument()
-    mapper.write(value, new DefaultMapperContext(doc, mapperRegistry))
+    mapper.writeInsert(value, new DefaultMapperContext(doc, mapperRegistry))
     doc
   }
 }

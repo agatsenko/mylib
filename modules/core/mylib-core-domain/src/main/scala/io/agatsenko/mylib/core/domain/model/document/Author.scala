@@ -33,7 +33,9 @@ class Author private(
     val version: EntityVersion,
     val name: PersonName,
     val description: Option[String],
-    val dateOfBirth: Option[LocalDate]) extends VersionedEntity[AuthorId] {
+    val dateOfBirth: Option[LocalDate]) extends VersionedEntity[Author] {
+  type TId = AuthorId
+
   Check.argNotNull(id, "id")
   Check.argNotNull(version, "version")
   Check.argNotNull(name, "name")
@@ -44,13 +46,10 @@ class Author private(
       name: PersonName = this.name,
       description: Option[String] = this.description,
       dateOfBirth: Option[LocalDate] = this.dateOfBirth): Author = {
-    if (name == this.name && description == this.description && dateOfBirth == this.dateOfBirth) {
-      this
-    }
-    else {
-      new Author(id, version.incrementIfUnchanged, name, description, dateOfBirth)
-    }
+    copy(name = name, description = description, dateOfBirth = dateOfBirth)
   }
+
+  override def acceptChanges: Author = copy(version = version.acceptChanges)
 
   override def toString: String = {
     ToStringHelper(this).
@@ -62,6 +61,22 @@ class Author private(
           dateOfBirth -> "dateOfBirth"
         ).
         toString
+  }
+
+  private def copy(
+      version: EntityVersion = this.version,
+      name: PersonName = this.name,
+      description: Option[String] = this.description,
+      dateOfBirth: Option[LocalDate] = this.dateOfBirth): Author = {
+    if (version == this.version &&
+        name == this.name &&
+        description == this.description &&
+        dateOfBirth == this.dateOfBirth) {
+      this
+    }
+    else {
+      new Author(id, version, name, description, dateOfBirth)
+    }
   }
 }
 

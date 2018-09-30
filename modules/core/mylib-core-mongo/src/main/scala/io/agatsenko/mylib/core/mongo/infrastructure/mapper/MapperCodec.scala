@@ -17,7 +17,7 @@ private[mapper] class MapperCodec[T](
 
   override def encode(writer: BsonWriter, value: T, encoderContext: EncoderContext): Unit = {
     val doc = new BsonDocument()
-    mapper.write(value, newMapperContext(doc))
+    mapper.writeInsert(value, newMapperContext(doc))
     getBsonDocCodec.encode(writer, doc, encoderContext)
   }
 

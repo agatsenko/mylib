@@ -71,6 +71,7 @@ lazy val mylibCoreMongo = (project in file("./modules/core/mylib-core-mongo")).
     dependsOn(
       mylibCoreInfrastructure,
       mylibCorePersist,
+      mylibCoreDomain,
     )
 
 lazy val mylibCoreJdbc = (project in file("./modules/core/mylib-core-jdbc")).

@@ -41,11 +41,6 @@ object FieldAccessor {
     collBuilder.result()
   }
 
-  def toArray[T](fieldName: String, coll: Iterable[T])(implicit accessor: FieldAccessor[T]): BsonArray = {
-    // FIXME: not yet implemented
-    ???
-  }
-
   def setArray[T](
       doc: BsonDocument,
       fieldName: String,

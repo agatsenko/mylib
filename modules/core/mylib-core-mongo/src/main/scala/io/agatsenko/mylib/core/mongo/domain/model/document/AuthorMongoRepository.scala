@@ -9,7 +9,7 @@ import java.util.UUID
 
 import io.agatsenko.mylib.core.domain.model.document.{Author, AuthorId, AuthorRepository, PersonName}
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.{Mapper, MapperContext, MapperRegistry}
-import io.agatsenko.mylib.core.mongo.infrastructure.support.{CommonFields, VersionedEntityRepository}
+import io.agatsenko.mylib.core.mongo.infrastructure.support.{CommonFields, UuidValueConverter, VersionedEntityRepository}
 import io.mango.common.util.Check
 import monix.eval.Task
 import org.mongodb.scala.{MongoCollection, MongoDatabase}
@@ -42,7 +42,7 @@ class AuthorMapper extends Mapper[Author] {
   }
 }
 
-object AuthorMapper {
+object AuthorMapper extends UuidValueConverter {
   val COLLECTION_NAME = "authors"
 
   object Fields extends CommonFields {
@@ -65,15 +65,15 @@ class AuthorMongoRepository(
 
   override def get(id: AuthorId): Task[Option[Author]] = Task.deferFuture {
     Check.argNotNull(id, "id")
-    collection.find(equal(ID, id.value)).headOption()
+    collection.find(equal(ID, toBson(id))).headOption()
   }
 
   override def getSeveral(ids: Seq[AuthorId]): Task[Iterable[Author]] = Task.deferFuture {
     Check.argNotNullOrEmpty(ids, "ids")
-    collection.find(in(ID, ids.map(_.value): _*)).toFuture()
+    collection.find(in(ID, toBson(ids): _*)).toFuture()
   }
 
   override protected def updateFilter(author: Author): Bson = {
-    and(equal(ID, author.id), equal(VERSION, author.version.persistedVersion))
+    and(equal(ID, toBson(author.id)), equal(VERSION, author.version.persistedVersion))
   }
 }

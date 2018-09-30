@@ -8,7 +8,7 @@ import java.util.UUID
 
 import io.agatsenko.mylib.core.domain.model.document._
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.{Mapper, MapperContext, MapperRegistry}
-import io.agatsenko.mylib.core.mongo.infrastructure.support.{CommonFields, VersionedEntityRepository}
+import io.agatsenko.mylib.core.mongo.infrastructure.support.{CommonFields, UuidValueConverter, VersionedEntityRepository}
 import monix.eval.Task
 import org.mongodb.scala.{MongoCollection, MongoDatabase}
 import org.mongodb.scala.bson.conversions.Bson
@@ -42,7 +42,8 @@ class DocumentMapper extends Mapper[Document] {
   }
 }
 
-object DocumentMapper {
+object DocumentMapper extends UuidValueConverter {
+
   val COLLECTION_NAME = "documents"
 
   object Fields extends CommonFields {
@@ -65,10 +66,10 @@ class DocumentMongoRepository(
   protected val collection: MongoCollection[Document] = db.getCollection[Document](COLLECTION_NAME)
 
   override def get(id: DocumentId): Task[Option[Document]] = Task.deferFuture {
-    collection.find(equal(ID, id.value)).headOption()
+    collection.find(equal(ID, toBson(id))).headOption()
   }
 
   override protected def updateFilter(doc: Document): Bson = {
-    and(equal(ID, doc.id.value), equal(VERSION, doc.version.persistedVersion))
+    and(equal(ID, toBson(doc.id)), equal(VERSION, doc.version.persistedVersion))
   }
 }

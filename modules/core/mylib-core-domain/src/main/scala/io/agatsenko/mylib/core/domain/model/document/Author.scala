@@ -7,12 +7,12 @@ package io.agatsenko.mylib.core.domain.model.document
 import java.time.LocalDate
 import java.util.UUID
 
-import io.agatsenko.mylib.core.infrastructure.domain.{EntityVersion, VersionedEntity}
+import io.agatsenko.mylib.core.infrastructure.domain.{EntityVersion, UuidValue, VersionedEntity}
 import io.agatsenko.mylib.infrastructure.util.ToStringHelper
 import io.mango.common.util.Check
 import monix.eval.Task
 
-case class AuthorId(value: UUID) {
+case class AuthorId(value: UUID) extends UuidValue {
   Check.argNotNull(value, "value")
 }
 

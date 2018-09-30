@@ -10,11 +10,11 @@ import org.bson.BsonDocument
 import org.mongodb.scala.bson.{BsonObjectId, BsonValue}
 
 class ObjectIdAccessor extends FieldAccessor[ObjectId] {
-  override def from(bson: BsonValue): ObjectId = getValue(bson.asObjectId())
+  override def toValue(bson: BsonValue): ObjectId = getValue(bson.asObjectId())
 
-  override def to(value: ObjectId): BsonValue = new BsonObjectId(value)
+  override def toBson(value: ObjectId): BsonValue = new BsonObjectId(value)
 
-  override def set(doc: BsonDocument, name: String, value: ObjectId): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: ObjectId): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): ObjectId = getValue(doc.getObjectId(name))
 

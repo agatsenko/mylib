@@ -11,9 +11,9 @@ import org.bson.{BsonBinary, BsonBinarySubType, BsonDocument}
 import org.mongodb.scala.bson.BsonValue
 
 class UuidAccessor extends FieldAccessor[UUID] {
-  override def from(bson: BsonValue): UUID = getValue(bson.asBinary())
+  override def toValue(bson: BsonValue): UUID = getValue(bson.asBinary())
 
-  override def to(value: UUID): BsonValue = {
+  override def toBson(value: UUID): BsonValue = {
     val uuidBytes = new Array[Byte](16)
 
     var lsb = value.getLeastSignificantBits
@@ -31,7 +31,7 @@ class UuidAccessor extends FieldAccessor[UUID] {
     new BsonBinary(BsonBinarySubType.UUID_STANDARD, uuidBytes)
   }
 
-  override def set(doc: BsonDocument, name: String, value: UUID): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: UUID): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): UUID = getValue(doc.getBinary(name))
 

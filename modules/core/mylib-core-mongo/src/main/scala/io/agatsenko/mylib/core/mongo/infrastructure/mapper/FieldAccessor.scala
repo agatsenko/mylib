@@ -18,9 +18,9 @@ import org.bson.types.ObjectId
 import org.mongodb.scala.bson.{BsonArray, BsonValue}
 
 trait FieldAccessor[T] {
-  def from(bson: BsonValue): T
+  def toValue(bson: BsonValue): T
 
-  def to(value: T): BsonValue
+  def toBson(value: T): BsonValue
 
   def set(doc: BsonDocument, name: String, value: T): Unit
 
@@ -30,27 +30,47 @@ trait FieldAccessor[T] {
 object FieldAccessor {
   val ID_FIELD_NAME = "_id"
 
+  def toValue[T](bson: BsonValue)(implicit accessor: FieldAccessor[T]): T = accessor.toValue(bson)
+
+  def toBson[T](value: T)(implicit accessor: FieldAccessor[T]): BsonValue = {
+    if (value == null) BsonNull.VALUE else accessor.toBson(value)
+  }
+
+  def toValue[T, C[_]](
+      array: BsonArray)(
+      implicit accessor: FieldAccessor[T],
+      cbf: CanBuildFrom[Nothing, T, C[T]]): C[T] = {
+    val collBuilder = cbf()
+    if (array != null) {
+      array.forEach(bson => collBuilder += accessor.toValue(bson))
+    }
+    collBuilder.result()
+  }
+
+  def toBson[T](values: Iterable[T])(implicit accessor: FieldAccessor[T]): BsonArray = {
+    val array = new BsonArray
+    if (values != null) {
+      values.foreach(v => array.add(accessor.toBson(v)))
+    }
+    array
+  }
+
   def getArray[T, C[_]](
       doc: BsonDocument,
       fieldName: String)(
       implicit accessor: FieldAccessor[T],
       cbf: CanBuildFrom[Nothing, T, C[T]]): C[T] = {
     Check.argNotNull(doc, "doc")
-    val collBuilder = cbf()
-    doc.getArray(fieldName).forEach(bsonValue => collBuilder += accessor.from(bsonValue))
-    collBuilder.result()
+    toValue(doc.getArray(fieldName))
   }
 
   def setArray[T](
       doc: BsonDocument,
       fieldName: String,
-      coll: Iterable[T])(
+      values: Iterable[T])(
       implicit accessor: FieldAccessor[T]): Unit = {
     Check.argNotNull(doc, "doc")
-    Check.argNotNull(coll, "coll")
-    val array = new BsonArray
-    coll.foreach(value => array.add(accessor.to(value)))
-    doc.put(fieldName, array)
+    doc.put(fieldName, toBson(values))
   }
 
   def setNull(doc: BsonDocument, fieldName: String): Unit = {

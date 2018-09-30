@@ -10,11 +10,11 @@ import org.bson.BsonDocument
 import org.mongodb.scala.bson.{BsonInt32, BsonValue}
 
 class ShortAccessor extends FieldAccessor[Short] {
-  override def from(bson: BsonValue): Short = getValue(bson.asInt32())
+  override def toValue(bson: BsonValue): Short = getValue(bson.asInt32())
 
-  override def to(value: Short): BsonValue = new BsonInt32(value)
+  override def toBson(value: Short): BsonValue = new BsonInt32(value)
 
-  override def set(doc: BsonDocument, name: String, value: Short): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: Short): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): Short = getValue(doc.getInt32(name))
 

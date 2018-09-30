@@ -9,11 +9,11 @@ import org.bson.BsonDocument
 import org.mongodb.scala.bson.{BsonString, BsonValue}
 
 class StringAccessor extends FieldAccessor[String] {
-  override def from(bson: BsonValue): String = getValue(bson.asString())
+  override def toValue(bson: BsonValue): String = getValue(bson.asString())
 
-  override def to(value: String): BsonValue = new BsonString(value)
+  override def toBson(value: String): BsonValue = new BsonString(value)
 
-  override def set(doc: BsonDocument, name: String, value: String): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: String): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): String = getValue(doc.getString(name))
 

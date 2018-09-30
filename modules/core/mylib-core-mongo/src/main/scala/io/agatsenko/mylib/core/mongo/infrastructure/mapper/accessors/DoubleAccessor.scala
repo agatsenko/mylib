@@ -9,11 +9,11 @@ import org.bson.BsonDocument
 import org.mongodb.scala.bson.{BsonDouble, BsonValue}
 
 class DoubleAccessor extends FieldAccessor[Double] {
-  override def from(bson: BsonValue): Double = getValue(bson.asDouble())
+  override def toValue(bson: BsonValue): Double = getValue(bson.asDouble())
 
-  override def to(value: Double): BsonValue = new BsonDouble(value)
+  override def toBson(value: Double): BsonValue = new BsonDouble(value)
 
-  override def set(doc: BsonDocument, name: String, value: Double): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: Double): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): Double = getValue(doc.getDouble(name))
 

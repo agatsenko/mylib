@@ -11,11 +11,11 @@ import org.bson.{BsonDateTime, BsonDocument}
 import org.mongodb.scala.bson.BsonValue
 
 class LocalTimeAccessor extends FieldAccessor[LocalTime] {
-  override def from(bson: BsonValue): LocalTime = getValue(bson.asDateTime())
+  override def toValue(bson: BsonValue): LocalTime = getValue(bson.asDateTime())
 
-  override def to(value: LocalTime): BsonValue = new BsonDateTime(value.toNanoOfDay)
+  override def toBson(value: LocalTime): BsonValue = new BsonDateTime(value.toNanoOfDay)
 
-  override def set(doc: BsonDocument, name: String, value: LocalTime): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: LocalTime): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): LocalTime = getValue(doc.getDateTime(name))
 

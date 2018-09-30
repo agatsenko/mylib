@@ -13,11 +13,11 @@ import org.mongodb.scala.bson.BsonValue
 class OffsetDateTimeAccessor extends FieldAccessor[OffsetDateTime] {
   private val systemZoneId = ZoneId.systemDefault()
 
-  override def from(bson: BsonValue): OffsetDateTime = getValue(bson.asDateTime())
+  override def toValue(bson: BsonValue): OffsetDateTime = getValue(bson.asDateTime())
 
-  override def to(value: OffsetDateTime): BsonValue = new BsonDateTime(value.toInstant.toEpochMilli)
+  override def toBson(value: OffsetDateTime): BsonValue = new BsonDateTime(value.toInstant.toEpochMilli)
 
-  override def set(doc: BsonDocument, name: String, value: OffsetDateTime): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: OffsetDateTime): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): OffsetDateTime = getValue(doc.getDateTime(name))
 

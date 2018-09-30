@@ -9,11 +9,11 @@ import org.bson.BsonDocument
 import org.mongodb.scala.bson.{BsonInt64, BsonValue}
 
 class LongAccessor extends FieldAccessor[Long] {
-  override def from(bson: BsonValue): Long = getValue(bson.asInt64())
+  override def toValue(bson: BsonValue): Long = getValue(bson.asInt64())
 
-  override def to(value: Long): BsonValue = new BsonInt64(value)
+  override def toBson(value: Long): BsonValue = new BsonInt64(value)
 
-  override def set(doc: BsonDocument, name: String, value: Long): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: Long): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): Long = getValue(doc.getInt64(name))
 

@@ -10,11 +10,11 @@ import org.bson.BsonDocument
 import org.mongodb.scala.bson.{BsonInt32, BsonValue}
 
 class ByteAccessor extends FieldAccessor[Byte] {
-  override def from(bson: BsonValue): Byte = getValue(bson.asInt32())
+  override def toValue(bson: BsonValue): Byte = getValue(bson.asInt32())
 
-  override def to(value: Byte): BsonValue = new BsonInt32(value)
+  override def toBson(value: Byte): BsonValue = new BsonInt32(value)
 
-  override def set(doc: BsonDocument, name: String, value: Byte): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: Byte): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): Byte = getValue(doc.getInt32(name))
 

@@ -9,11 +9,11 @@ import org.bson.{BsonBoolean, BsonDocument}
 import org.mongodb.scala.bson.BsonValue
 
 class BooleanAccessor extends FieldAccessor[Boolean] {
-  override def from(bsonValue: BsonValue): Boolean = getValue(bsonValue.asBoolean())
+  override def toValue(bsonValue: BsonValue): Boolean = getValue(bsonValue.asBoolean())
 
-  override def to(value: Boolean): BsonValue = if (value) BsonBoolean.TRUE else BsonBoolean.FALSE
+  override def toBson(value: Boolean): BsonValue = if (value) BsonBoolean.TRUE else BsonBoolean.FALSE
 
-  override def set(doc: BsonDocument, name: String, value: Boolean): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: Boolean): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): Boolean = getValue(doc.getBoolean(name))
 

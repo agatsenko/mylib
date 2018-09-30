@@ -15,21 +15,21 @@ import org.mongodb.scala.bson.{BsonArray, BsonValue}
 class ArrayAccessor[T, C[_] <: Iterable[T]](
     val accessor: FieldAccessor[T],
     val cbf: CanBuildFrom[Nothing, T, C[T]]) extends FieldAccessor[C[T]] {
-  override def from(bson: BsonValue): C[T] = getValue(bson.asArray())
+  override def toValue(bson: BsonValue): C[T] = getValue(bson.asArray())
 
-  override def to(value: C[T]): BsonValue = {
+  override def toBson(value: C[T]): BsonValue = {
     val array = new BsonArray
-    value.foreach(v => array.add(accessor.to(v)))
+    value.foreach(v => array.add(accessor.toBson(v)))
     array
   }
 
-  override def set(doc: BsonDocument, name: String, value: C[T]): Unit = doc.put(name, to(value))
+  override def set(doc: BsonDocument, name: String, value: C[T]): Unit = doc.put(name, toBson(value))
 
   override def get(doc: BsonDocument, name: String): C[T] = getValue(doc.getArray(name))
 
   def getValue(bson: BsonArray): C[T] = {
     val cb = cbf()
-    bson.forEach(bv => cb += accessor.from(bv))
+    bson.forEach(bv => cb += accessor.toValue(bv))
     cb.result()
   }
 }

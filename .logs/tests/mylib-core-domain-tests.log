@@ -1,5 +1,0 @@
-18:28:10.333 INFO  [main] io.agatsenko.mylib.core.domain.Tester$ - int value: 10, str value: 'Hello World'
-18:28:10.340 ERROR [main] io.agatsenko.mylib.core.domain.Tester$ - int value: 10, str value: 'Hello World'
-java.lang.Exception: test error
-	at io.agatsenko.mylib.core.domain.Tester$.main(Tester.scala:12)
-	at io.agatsenko.mylib.core.domain.Tester.main(Tester.scala)

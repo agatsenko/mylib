@@ -4,15 +4,17 @@
   */
 package io.agatsenko.mylib.core.mongo.domain.model.document
 
+import scala.concurrent.Future
+
 import java.util.UUID
+
+import io.mango.common.util.Check
+import org.mongodb.scala.{MongoCollection, MongoDatabase}
+import org.mongodb.scala.bson.conversions.Bson
 
 import io.agatsenko.mylib.core.domain.model.document.{DocumentId, Tag, TagId, TagRepository}
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.{Mapper, MapperContext, MapperRegistry}
 import io.agatsenko.mylib.core.mongo.infrastructure.support.{CommonFields, VersionedEntityRepository}
-import io.mango.common.util.Check
-import monix.eval.Task
-import org.mongodb.scala.{MongoCollection, MongoDatabase}
-import org.mongodb.scala.bson.conversions.Bson
 
 class TagMapper extends Mapper[Tag] {
   import io.agatsenko.mylib.core.mongo.infrastructure.mapper.FieldAccessor.Implicit._
@@ -50,6 +52,7 @@ class TagMongoRepository(
     db: MongoDatabase,
     protected val mapperRegistry: MapperRegistry) extends TagRepository with VersionedEntityRepository {
   import org.mongodb.scala.model.Filters._
+
   import TagMapper._
   import TagMapper.Fields._
 
@@ -57,12 +60,12 @@ class TagMongoRepository(
 
   protected val collection: MongoCollection[Tag] = db.getCollection[Tag](COLLECTION_NAME)
 
-  override def get(name: String): Task[Option[Tag]] = Task.deferFuture {
+  override def get(name: String): Future[Option[Tag]] = {
     Check.argNotNullOrEmpty(name, "name")
     collection.find(equal(NAME, name)).headOption()
   }
 
-  override def getSeveral(names: Seq[String]): Task[Iterable[Tag]] = Task.deferFuture {
+  override def getSeveral(names: Seq[String]): Future[Iterable[Tag]] = {
     Check.argNotNullOrEmpty(names, "names")
     collection.find(in(NAME, names: _*)).toFuture()
   }

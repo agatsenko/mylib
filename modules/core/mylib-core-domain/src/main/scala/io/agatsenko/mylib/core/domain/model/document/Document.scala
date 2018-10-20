@@ -4,12 +4,14 @@
   */
 package io.agatsenko.mylib.core.domain.model.document
 
+import scala.concurrent.Future
+
 import java.util.UUID
+
+import io.mango.common.util.Check
 
 import io.agatsenko.mylib.core.infrastructure.domain.{EntityVersion, UuidValue, VersionedEntity}
 import io.agatsenko.mylib.infrastructure.util.ToStringHelper
-import io.mango.common.util.Check
-import monix.eval.Task
 
 case class DocumentId(value: UUID) extends UuidValue {
   Check.argNotNull(value, "value")
@@ -20,9 +22,9 @@ object DocumentId {
 }
 
 trait DocumentRepository {
-  def get(id: DocumentId): Task[Option[Document]]
+  def get(id: DocumentId): Future[Option[Document]]
 
-  def save(doc: Document): Task[Document]
+  def save(doc: Document): Future[Document]
 }
 
 class Document private(

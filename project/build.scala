@@ -10,7 +10,7 @@ object build {
   object ver {
     val java = "1.8"
 //    val crossScala = Seq("2.11.12", "2.12.6")
-    val crossScala = Seq("2.12.6")
+    val crossScala = Seq("2.12.7")
 
         val enumeratum = "1.5.+"
 

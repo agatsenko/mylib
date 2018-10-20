@@ -4,6 +4,8 @@
   */
 package io.agatsenko.mylib.core.mongo.domain.model.document
 
+import scala.concurrent.Future
+
 import java.time.LocalDate
 import java.util.UUID
 
@@ -11,7 +13,6 @@ import io.agatsenko.mylib.core.domain.model.document.{Author, AuthorId, AuthorRe
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.{Mapper, MapperContext, MapperRegistry}
 import io.agatsenko.mylib.core.mongo.infrastructure.support.{CommonFields, UuidValueConverter, VersionedEntityRepository}
 import io.mango.common.util.Check
-import monix.eval.Task
 import org.mongodb.scala.{MongoCollection, MongoDatabase}
 import org.mongodb.scala.bson.conversions.Bson
 
@@ -63,12 +64,12 @@ class AuthorMongoRepository(
 
   protected val collection: MongoCollection[Author] = db.getCollection[Author](COLLECTION_NAME)
 
-  override def get(id: AuthorId): Task[Option[Author]] = Task.deferFuture {
+  override def get(id: AuthorId): Future[Option[Author]] = {
     Check.argNotNull(id, "id")
     collection.find(equal(ID, toBson(id))).headOption()
   }
 
-  override def getSeveral(ids: Seq[AuthorId]): Task[Iterable[Author]] = Task.deferFuture {
+  override def getSeveral(ids: Seq[AuthorId]): Future[Iterable[Author]] = {
     Check.argNotNullOrEmpty(ids, "ids")
     collection.find(in(ID, toBson(ids): _*)).toFuture()
   }

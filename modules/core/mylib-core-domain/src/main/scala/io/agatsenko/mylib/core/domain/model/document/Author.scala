@@ -4,13 +4,15 @@
   */
 package io.agatsenko.mylib.core.domain.model.document
 
+import scala.concurrent.Future
+
 import java.time.LocalDate
 import java.util.UUID
 
+import io.mango.common.util.Check
+
 import io.agatsenko.mylib.core.infrastructure.domain.{EntityVersion, UuidValue, VersionedEntity}
 import io.agatsenko.mylib.infrastructure.util.ToStringHelper
-import io.mango.common.util.Check
-import monix.eval.Task
 
 case class AuthorId(value: UUID) extends UuidValue {
   Check.argNotNull(value, "value")
@@ -21,11 +23,11 @@ object AuthorId {
 }
 
 trait AuthorRepository {
-  def get(id: AuthorId): Task[Option[Author]]
+  def get(id: AuthorId): Future[Option[Author]]
 
-  def getSeveral(ids: Seq[AuthorId]): Task[Iterable[Author]]
+  def getSeveral(ids: Seq[AuthorId]): Future[Iterable[Author]]
 
-  def save(author: Author): Task[Author]
+  def save(author: Author): Future[Author]
 }
 
 class Author private(

@@ -4,12 +4,13 @@
   */
 package io.agatsenko.mylib.core.mongo.domain.model.document
 
+import scala.concurrent.Future
+
 import java.util.UUID
 
 import io.agatsenko.mylib.core.domain.model.document._
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.{Mapper, MapperContext, MapperRegistry}
 import io.agatsenko.mylib.core.mongo.infrastructure.support.{CommonFields, UuidValueConverter, VersionedEntityRepository}
-import monix.eval.Task
 import org.mongodb.scala.{MongoCollection, MongoDatabase}
 import org.mongodb.scala.bson.conversions.Bson
 
@@ -65,7 +66,7 @@ class DocumentMongoRepository(
 
   protected val collection: MongoCollection[Document] = db.getCollection[Document](COLLECTION_NAME)
 
-  override def get(id: DocumentId): Task[Option[Document]] = Task.deferFuture {
+  override def get(id: DocumentId): Future[Option[Document]] = {
     collection.find(equal(ID, toBson(id))).headOption()
   }
 

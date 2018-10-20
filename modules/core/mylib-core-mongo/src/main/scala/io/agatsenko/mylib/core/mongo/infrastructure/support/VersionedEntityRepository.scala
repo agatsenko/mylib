@@ -10,14 +10,13 @@ import scala.concurrent.Future
 import io.agatsenko.mylib.core.infrastructure.domain.VersionedEntity
 import io.agatsenko.mylib.core.mongo.infrastructure.mapper.MapperRegistry
 import io.mango.common.util.Check
-import monix.eval.Task
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 
 trait VersionedEntityRepository {
   type TEntity <: VersionedEntity[TEntity]
 
-  def save(entity: TEntity): Task[TEntity] = Task.deferFuture {
+  def save(entity: TEntity): Future[TEntity] = {
     Check.argNotNull(entity, "entity")
     if (entity.hasChanges) insert(entity) else update(entity)
   }

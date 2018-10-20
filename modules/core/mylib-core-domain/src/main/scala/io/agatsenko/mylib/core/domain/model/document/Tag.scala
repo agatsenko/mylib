@@ -4,21 +4,23 @@
   */
 package io.agatsenko.mylib.core.domain.model.document
 
+import scala.concurrent.Future
+
+import io.mango.common.util.Check
+
 import io.agatsenko.mylib.core.infrastructure.domain.{EntityVersion, VersionedEntity}
 import io.agatsenko.mylib.infrastructure.util.ToStringHelper
-import io.mango.common.util.Check
-import monix.eval.Task
 
 case class TagId(tagName: String) {
   Check.argNotNull(tagName, "tagName")
 }
 
 trait TagRepository {
-  def get(name: String): Task[Option[Tag]]
+  def get(name: String): Future[Option[Tag]]
 
-  def getSeveral(names: Seq[String]): Task[Iterable[Tag]]
+  def getSeveral(names: Seq[String]): Future[Iterable[Tag]]
 
-  def save(tag: Tag): Task[Tag]
+  def save(tag: Tag): Future[Tag]
 }
 
 class Tag private(

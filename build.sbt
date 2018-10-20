@@ -28,10 +28,10 @@ lazy val mylibCoreInfrastructure = (project in file("./modules/core/mylib-core-i
       mylibTest % Test,
     )
 
-lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain")).
+lazy val mylibCore = (project in file("./modules/core/mylib-core")).
     settings(build.scalaCommonSettings: _*).
     settings(
-      name := "mylib-core-domain",
+      name := "mylib-core",
       libraryDependencies ++= Seq(
         build.depends.mangoCommon,
         build.depends.mangoServices,
@@ -69,7 +69,7 @@ lazy val mylibCoreMongo = (project in file("./modules/core/mylib-core-mongo")).
     dependsOn(
       mylibCoreInfrastructure,
       mylibCorePersist,
-      mylibCoreDomain,
+      mylibCore,
     )
 
 lazy val mylibCoreJdbc = (project in file("./modules/core/mylib-core-jdbc")).
@@ -144,7 +144,7 @@ lazy val mylib = (project in file(".")).
       mylibTest,
 
       mylibCoreInfrastructure,
-      mylibCoreDomain,
+      mylibCore,
       mylibCorePersist,
       mylibCoreMongo,
       mylibCoreJdbc,

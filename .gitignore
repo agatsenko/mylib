@@ -4,6 +4,9 @@
 /.classpath
 /.project
 /.settings
-/.logs
 
-/modules/web/mylib-web-play/logs
+/modules/mylib-frontend-desktop/node_modules
+/modules/mylib-frontend-desktop/package-lock.json
+/modules/mylib-frontend-desktop/yarn.lock
+/modules/mylib-frontend-desktop/dist
+/modules/mylib-frontend-desktop/dist_electron

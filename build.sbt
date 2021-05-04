@@ -1,6 +1,108 @@
+lazy val mylibTester = (project in file("./modules/mylib-tester")).
+    settings(build.scalaCommonSettings: _*).
+    settings(
+      name := "mylib-tester",
+      libraryDependencies ++= Seq(
+        build.depends.logbackClassic,
+        build.depends.h2,
+        build.depends.h2Mvstore,
+        build.depends.hikaricp,
+        build.depends.slick,
+        build.depends.slickHikaricp,
+        build.depends.scalikejdbc,
+        build.depends.doobieCore,
+        build.depends.doobieH2,
+        build.depends.doobieHikari,
+        build.depends.mangoSql,
+        build.depends.mangoCommon,
+        build.depends.mangoServices,
+//        "org.mongodb" % "bson" % "3.12.1",
+        "org.mongodb.scala" %% "mongo-scala-bson" % "2.8.0",
+      )
+    )
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+lazy val mylibDocStorage = (project in file("./modules/mylib-doc-storage"))
+    .settings(build.scalaCommonSettings: _*)
+    .settings(
+      name := "mylib-doc-storage",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+      ),
+    )
+    .dependsOn(
+    )
+
+lazy val mylibFsDocStorage = (project in file("./modules/mylib-fs-doc-storage"))
+    .settings(build.scalaCommonSettings: _*)
+    .settings(
+      name := "mylib-fs-doc-storage",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+      ),
+    )
+    .dependsOn(
+      mylibDocStorage,
+    )
+
+lazy val mylibCore = (project in file("./modules/mylib-core"))
+    .settings(build.scalaCommonSettings: _*)
+    .settings(
+      name := "mylib-core",
+      libraryDependencies ++= Seq(
+        build.depends.mangoCommon,
+      ),
+    )
+    .dependsOn(
+      mylibDocStorage,
+    )
+
+lazy val mylibHttpApi = (project in file("./modules/mylib-http-api"))
+    .settings(build.scalaCommonSettings: _*)
+    .settings(
+      name := "mylib-http-api",
+      libraryDependencies ++= Seq(
+        build.depends.akkaStream,
+        build.depends.akkaHttp,
+      )
+    )
+    .dependsOn(
+      mylibCore,
+    )
+
+lazy val mylibFrontendDesktop = (project in file("./modules/mylib-frontend-desktop"))
+    .enablePlugins(
+      NpmPlugin,
+    )
+    .settings(build.commonSettings: _*)
+    .settings(
+      name := "mylib-frontend-desktop",
+
+      clean := Def.sequential(
+        NpmKeys.npmRun.toTask(" clean"),
+        clean,
+      ).value,
+
+      compile in Compile := Def.task {
+        NpmKeys.npmRun.toTask(" lint").value
+        (compile in Compile).value
+      }.value,
+
+      Keys.`package` in Compile := Def.task {
+        NpmKeys.npmRun.toTask(" electron:build").value
+        (Keys.`package` in Compile).value
+      }.value,
+    )
+    .dependsOn(
+    )
+
+
+////////////////////////////////////////////
+
 //#region test modules
 
-lazy val mylibTest = (project in file("./modules/test/mylib-test")).
+lazy val mylibTest = (project in file("./modules/mylib-test")).
     settings(build.scalaCommonSettings: _*).
     settings(
       name := "mylib-test",
@@ -16,19 +118,20 @@ lazy val mylibTest = (project in file("./modules/test/mylib-test")).
 
 //#region core modules
 
-lazy val mylibCoreInfrastructure = (project in file("./modules/core/mylib-core-infrastructure")).
+lazy val mylibCoreInfrastructure = (project in file("./modules/mylib-core-infrastructure")).
     settings(build.scalaCommonSettings: _*).
     settings(
       name := "mylib-core-infrastructure",
       libraryDependencies ++= Seq(
         build.depends.mangoCommon,
+        build.depends.akkaStream,
       ),
     ).
     dependsOn(
       mylibTest % Test,
     )
 
-lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain")).
+lazy val mylibCoreDomain = (project in file("./modules/mylib-core-domain")).
     settings(build.scalaCommonSettings: _*).
     settings(
       name := "mylib-core-domain",
@@ -46,7 +149,7 @@ lazy val mylibCoreDomain = (project in file("./modules/core/mylib-core-domain"))
       mylibTest % Test,
     )
 
-lazy val mylibCorePersist = (project in file("./modules/core/mylib-core-persist")).
+lazy val mylibCorePersist = (project in file("./modules/mylib-core-persist")).
     settings(build.scalaCommonSettings: _*).
     settings(
       name := "mylib-core-persist",
@@ -58,23 +161,7 @@ lazy val mylibCorePersist = (project in file("./modules/core/mylib-core-persist"
       mylibCoreInfrastructure,
     )
 
-lazy val mylibCoreMongo = (project in file("./modules/core/mylib-core-mongo")).
-    settings(build.scalaCommonSettings: _*).
-    settings(
-      name := "mylib-core-mongo",
-      libraryDependencies ++= Seq(
-        build.depends.monix,
-        build.depends.mangoCommon,
-        build.depends.mongoScalaDriver,
-      ),
-    ).
-    dependsOn(
-      mylibCoreInfrastructure,
-      mylibCorePersist,
-      mylibCoreDomain,
-    )
-
-lazy val mylibCoreJdbc = (project in file("./modules/core/mylib-core-jdbc")).
+lazy val mylibCoreJdbc = (project in file("./modules/mylib-core-jdbc")).
     settings(build.scalaCommonSettings: _*).
     settings(
       name := "mylib-core-jdbc",
@@ -88,7 +175,7 @@ lazy val mylibCoreJdbc = (project in file("./modules/core/mylib-core-jdbc")).
       mylibCorePersist,
     )
 
-lazy val mylibCoreH2 = (project in file("./modules/core/mylib-core-h2")).
+lazy val mylibCoreH2 = (project in file("./modules/mylib-core-h2")).
     settings(build.scalaCommonSettings: _*).
     settings(
       name := "mylib-core-h2",
@@ -107,34 +194,6 @@ lazy val mylibCoreH2 = (project in file("./modules/core/mylib-core-h2")).
 
 //#endregion core modules
 
-//#region web modules
-
-lazy val mylibWebPlay = (project in file("./modules/web/mylib-web-play")).
-    enablePlugins(
-      PlayScala,
-    ).
-    settings(build.scalaCommonSettings: _*).
-    settings(
-      name := "mylib-web-play",
-      libraryDependencies ++= Seq(
-        build.depends.mangoCommon,
-        guice,
-        build.depends.scalatestplusPlay % Test,
-      ),
-      // Adds additional packages into Twirl
-      //TwirlKeys.templateImports += "com.agat.controllers._"
-
-      // Adds additional packages into conf/routes
-      // play.sbt.routes.RoutesKeys.routesImport += "com.agat.binders._"
-    ).
-    dependsOn(
-      mylibCoreInfrastructure,
-
-      mylibTest % Test,
-    )
-
-//#endregion web modules
-
 //#region root module
 
 lazy val mylib = (project in file(".")).
@@ -143,16 +202,19 @@ lazy val mylib = (project in file(".")).
       name := "mylib-parent",
     ).
     aggregate(
+      mylibDocStorage,
+      mylibFsDocStorage,
+      mylibCore,
+      mylibHttpApi,
+      mylibFrontendDesktop,
+
       mylibTest,
 
       mylibCoreInfrastructure,
       mylibCoreDomain,
       mylibCorePersist,
-      mylibCoreMongo,
       mylibCoreJdbc,
       mylibCoreH2,
-
-      mylibWebPlay,
     )
 
 //#endregion root module

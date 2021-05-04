@@ -3,34 +3,37 @@ import Keys._
 
 object build {
   object project {
-    val org = "io.agatsenko"
+    val org = "io.mylib"
     val ver = "0.1.0"
   }
 
   object ver {
     val java = "1.8"
-//    val crossScala = Seq("2.11.12", "2.12.6")
-    val crossScala = Seq("2.12.6")
+    val scala = "2.13.1"
 
-        val enumeratum = "1.5.+"
+    val enumeratum = "1.5.+"
 
     val slf4j = "1.7.+"
     val logback = "1.2.+"
     val scalaLogging = "3.9.+"
     val janino = "3.0.+"
 
-    val monix = "2.3.+"
-    val circe = "0.9.+"
+    val monix = "3.1.+"
+    val circe = "0.12.+"
+    val circeOptic = "0.12.+"
     val macwire = "2.3.+"
-    val mango = "0.+"
+    val mango = "0.4.2"
 
-    val mongoScala = "2.4.+"
-    val scalikejdbc = "3.3.+"
-    val hikariCp = "2.7.+"
+    val akka = "2.6.+"
+    val akkaHttp = "10.1.+"
+
     val h2 = "1.4.+"
+    val hikaricp = "3.4.+"
+    val slick = "3.3.+"
+    val scalikejdbc = "3.4.+"
+    val doobie = "0.8.+"
 
-    val scalatest = "3.0.5"
-    val scalatestplusPlay = "3.1.+"
+    val scalatest = "3.1.0"
   }
 
   object depends {
@@ -41,6 +44,7 @@ object build {
     val slf4jApi = "org.slf4j" % "slf4j-api" % ver.slf4j
     val logbackClassic = "ch.qos.logback" % "logback-classic" % ver.logback
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % ver.scalaLogging
+    // FIXME: need to review to remove
     val janio = "org.codehaus.janino" % "janino" % ver.janino
 
     val monix = "io.monix" %% "monix" % ver.monix
@@ -48,29 +52,40 @@ object build {
     val circeCore = "io.circe" %% "circe-core" % ver.circe
     val circeGeneric = "io.circe" %% "circe-generic" % ver.circe
     val circeParser = "io.circe" %% "circe-parser" % ver.circe
-    val circeOptics = "io.circe" %% "circe-optics" % ver.circe
+    val circeOptics = "io.circe" %% "circe-optics" % ver.circeOptic
 
     val macwireMacros = "com.softwaremill.macwire" %% "macros" % ver.macwire
     val macwireUtil = "com.softwaremill.macwire" %% "util" % ver.macwire
+
+    val akkaActor = "com.typesafe.akka" %% "akka-actor" % ver.akka
+    val akkaActorTyped = "com.typesafe.akka" %% "akka-actor-typed" % ver.akka
+    val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % ver.akka
+    val akkaStream = "com.typesafe.akka" %% "akka-stream" % ver.akka
+    val akkaHttp = "com.typesafe.akka" %% "akka-http" % ver.akkaHttp
 
     val mangoCommon = "io.mango" %% "mango-common" % ver.mango
     val mangoServices = "io.mango" %% "mango-services" % ver.mango
     val mangoServicesMacwire = "io.mango" %% "mango-services-macwire" % ver.mango
 
-    val mongoScalaDriver = "org.mongodb.scala" %% "mongo-scala-driver" % ver.mongoScala
-    val scalikejdbc = "org.scalikejdbc" %% "scalikejdbc" % ver.scalikejdbc
-    val hikariCp = "com.zaxxer" % "HikariCP" % ver.hikariCp
     val h2 = "com.h2database" % "h2" % ver.h2
+    val h2Mvstore = "com.h2database" % "h2-mvstore" % ver.h2
+    val hikaricp = "com.zaxxer" % "HikariCP" % ver.hikaricp
+    val slick = "com.typesafe.slick" %% "slick" % ver.slick
+    val slickHikaricp = "com.typesafe.slick" %% "slick-hikaricp" % ver.slick
+    val scalikejdbc = "org.scalikejdbc" %% "scalikejdbc" % ver.scalikejdbc
+    val doobieCore = "org.tpolecat" %% "doobie-core" % ver.doobie
+    val doobieH2 = "org.tpolecat" %% "doobie-h2" % ver.doobie
+    val doobieHikari = "org.tpolecat" %% "doobie-hikari" % ver.doobie
+    val mangoSql = "io.mango" %% "mango-sql" % ver.mango
 
     val scalatest = "org.scalatest" %% "scalatest" % ver.scalatest
-    val scalatestplusPlay = "org.scalatestplus.play" %% "scalatestplus-play" % ver.scalatestplusPlay
   }
 
   val commonSettings = Seq(
     organization := project.org,
     version := project.ver,
 
-    crossScalaVersions := ver.crossScala,
+    scalaVersion := ver.scala,
 
     // some info about scala compile options see in
     // http://blog.threatstack.com/useful-scalac-options-for-better-scala-development-part-1
@@ -84,8 +99,6 @@ object build {
       "-unchecked",
       // Emit warning and location for usages of features that should be imported explicitly.
       "-feature",
-      // Enable experimental extensions.
-      "-Xexperimental",
       // Wrap field accessors to throw an exception on uninitialized access.
       "-Xcheckinit",
       // Enable recommended additional warnings.
@@ -102,7 +115,7 @@ object build {
     excludeFilter in unmanagedSources := HiddenFileFilter || ".keepdir",
     excludeFilter in unmanagedResources := HiddenFileFilter || ".keepdir",
 
-    publishM2Configuration := publishM2Configuration.value.withOverwrite(true),
+    resolvers += "github my artifacts" at "https://raw.githubusercontent.com/agatsenko/artifacts/master/maven",
   )
 
   val scalaCommonSettings = commonSettings ++ Seq(
